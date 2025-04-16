@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "683386073225",
+    "project_id": "desafioloomi",
+    "storage_bucket": "desafioloomi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683386073225:android:b1df3615f0456da7db1658",
+        "android_client_info": {
+          "package_name": "br.com.testeloomi.desafio_loomi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdMafQh1v_noufxN5BfNvJ1K1buMaKrsI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
