@@ -13,16 +13,12 @@ class ApiClient {
     String? baseUrl,
   })  : _dio = dio,
         _firebaseAuth = firebaseAuth {
-    // Configuração básica do Dio
     _dio.options.baseUrl = baseUrl ?? '';
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
-
-    // Adiciona interceptors
     _dio.interceptors.addAll([
       AuthInterceptor(firebaseAuth: _firebaseAuth),
       LoggingInterceptor(),
-      // Pode adicionar outros interceptors como QueuedInterceptor para concorrência
     ]);
   }
 
@@ -119,12 +115,9 @@ class ApiClient {
   }
 
   void _handleError(DioException e) {
-    // Pode adicionar tratamento específico para diferentes tipos de erro
     if (e.response != null) {
-      // Erro com resposta do servidor
       debugPrint('Error data: ${e.response?.data}');
     } else {
-      // Erro sem resposta (timeout, conexão, etc.)
       debugPrint('Error message: ${e.message}');
     }
   }
