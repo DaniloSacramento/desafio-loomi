@@ -12,13 +12,13 @@ mixin _$AuthStore on _AuthStoreBase, Store {
   late final _$userAtom = Atom(name: '_AuthStoreBase.user', context: context);
 
   @override
-  User get user {
+  AppUser get user {
     _$userAtom.reportRead();
     return super.user;
   }
 
   @override
-  set user(User value) {
+  set user(AppUser value) {
     _$userAtom.reportWrite(value, super.user, () {
       super.user = value;
     });

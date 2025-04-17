@@ -1,18 +1,30 @@
-class User {
+import 'package:firebase_auth/firebase_auth.dart';
+
+class AppUser {
   final String id;
   final String? email;
   final String? name;
   final String? photoUrl;
 
-  const User({
+  const AppUser({
     required this.id,
     this.email,
     this.name,
     this.photoUrl,
   });
 
-  static const User empty = User(id: '');
+  factory AppUser.empty() {
+    return const AppUser(id: '');
+  }
 
-  // Método para verificar se o usuário está vazio
-  bool get isEmpty => this == User.empty;
+  factory AppUser.fromFirebase(User firebaseUser) {
+    return AppUser(
+      id: firebaseUser.uid,
+      email: firebaseUser.email,
+      name: firebaseUser.displayName,
+      photoUrl: firebaseUser.photoURL,
+    );
+  }
+
+  bool get isEmpty => id.isEmpty;
 }

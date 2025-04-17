@@ -1,6 +1,5 @@
-import 'package:desafio_loomi/app/features/auth/domain/repositories/auth_repository.dart'
-    show AuthRepository;
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:desafio_loomi/app/features/auth/domain/entities/user.dart';
+import 'package:desafio_loomi/app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:mobx/mobx.dart';
 
 part 'auth_store.g.dart';
@@ -13,7 +12,7 @@ abstract class _AuthStoreBase with Store {
   _AuthStoreBase(this.authRepository);
 
   @observable
-  User user = User.empty();
+  AppUser user = AppUser.empty();
 
   @observable
   bool isLoading = false;
@@ -29,6 +28,7 @@ abstract class _AuthStoreBase with Store {
       user = await authRepository.signInWithEmailAndPassword(email, password);
     } catch (e) {
       errorMessage = e.toString();
+      rethrow;
     } finally {
       isLoading = false;
     }
@@ -42,6 +42,7 @@ abstract class _AuthStoreBase with Store {
       user = await authRepository.signUpWithEmailAndPassword(email, password);
     } catch (e) {
       errorMessage = e.toString();
+      rethrow;
     } finally {
       isLoading = false;
     }
@@ -55,6 +56,7 @@ abstract class _AuthStoreBase with Store {
       user = await authRepository.signInWithGoogle();
     } catch (e) {
       errorMessage = e.toString();
+      rethrow;
     } finally {
       isLoading = false;
     }
@@ -62,7 +64,12 @@ abstract class _AuthStoreBase with Store {
 
   @action
   Future<void> signOut() async {
-    await authRepository.signOut();
-    user = User.empty;
+    try {
+      await authRepository.signOut();
+      user = AppUser.empty();
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
   }
 }

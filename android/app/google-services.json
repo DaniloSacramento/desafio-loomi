@@ -1,26 +1,43 @@
 {
   "project_info": {
-    "project_number": "683386073225",
-    "project_id": "desafioloomi",
-    "storage_bucket": "desafioloomi.firebasestorage.app"
+    "project_number": "787952710825",
+    "project_id": "untold-app-prod",
+    "storage_bucket": "untold-app-prod.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:683386073225:android:b1df3615f0456da7db1658",
+        "mobilesdk_app_id": "1:787952710825:android:d65eb905a7dcfac58b25b8",
         "android_client_info": {
-          "package_name": "br.com.testeloomi.desafio_loomi"
+          "package_name": "com.app.untold"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "787952710825-mqq3hdf35el2eand7ecdgs14dd46lh6m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDdMafQh1v_noufxN5BfNvJ1K1buMaKrsI"
+          "current_key": "AIzaSyAHfsGU0-XC1rWd2PiBe245eOeethkP2tQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "787952710825-f5o3s31mreqfbf86i1ntcns2ga5qnm6u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "787952710825-cbfuaot1jgmg3msq0amdto8l4suj452v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.app.untold"
+              }
+            }
+          ]
         }
       }
     }

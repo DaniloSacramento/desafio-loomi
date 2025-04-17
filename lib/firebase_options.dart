@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '683386073225',
     projectId: 'desafioloomi',
     storageBucket: 'desafioloomi.firebasestorage.app',
-    iosBundleId: 'br.com.testeloomi.desafioLoomi',
+    iosBundleId: 'com.app.untold',
   );
 }

@@ -1,9 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:desafio_loomi/app/features/auth/domain/entities/user.dart';
 
 abstract class AuthRepository {
-  Future<User> signInWithEmailAndPassword(String email, String password);
-  Future<User> signUpWithEmailAndPassword(String email, String password);
-  Future<User> signInWithGoogle();
+  Future<AppUser> signInWithEmailAndPassword(String email, String password);
+  Future<AppUser> signUpWithEmailAndPassword(String email, String password);
+  Future<AppUser> signInWithGoogle();
+  Future<AppUser> signInWithApple();
   Future<void> signOut();
-  Stream<User> get user;
+  Stream<AppUser> get user;
 }
