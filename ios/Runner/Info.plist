@@ -4,6 +4,23 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+	<dict>
+		<key>CFBundleTypeRole</key>
+		<string>Editor</string>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		<string>com.googleusercontent.apps.YOUR_CLIENT_ID</string>
+		</array>
+	</dict>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Precisamos acessar sua câmera para atualizar sua foto de perfil</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Precisamos acessar sua galeria para selecionar uma foto de perfil</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Precisamos salvar imagens na sua galeria</string>
 	<key>CFBundleDisplayName</key>
 	<string>Desafio Loomi</string>
 	<key>CFBundleExecutable</key>

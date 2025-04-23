@@ -9,6 +9,14 @@ part of 'auth_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$AuthStore on _AuthStoreBase, Store {
+  Computed<bool>? _$isLoggedInComputed;
+
+  @override
+  bool get isLoggedIn =>
+      (_$isLoggedInComputed ??= Computed<bool>(() => super.isLoggedIn,
+              name: '_AuthStoreBase.isLoggedIn'))
+          .value;
+
   late final _$userAtom = Atom(name: '_AuthStoreBase.user', context: context);
 
   @override
@@ -21,6 +29,22 @@ mixin _$AuthStore on _AuthStoreBase, Store {
   set user(AppUser value) {
     _$userAtom.reportWrite(value, super.user, () {
       super.user = value;
+    });
+  }
+
+  late final _$strapiUserIdAtom =
+      Atom(name: '_AuthStoreBase.strapiUserId', context: context);
+
+  @override
+  int? get strapiUserId {
+    _$strapiUserIdAtom.reportRead();
+    return super.strapiUserId;
+  }
+
+  @override
+  set strapiUserId(int? value) {
+    _$strapiUserIdAtom.reportWrite(value, super.strapiUserId, () {
+      super.strapiUserId = value;
     });
   }
 
@@ -54,6 +78,15 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     _$errorMessageAtom.reportWrite(value, super.errorMessage, () {
       super.errorMessage = value;
     });
+  }
+
+  late final _$_fetchAndSetStrapiUserIdAsyncAction =
+      AsyncAction('_AuthStoreBase._fetchAndSetStrapiUserId', context: context);
+
+  @override
+  Future<void> _fetchAndSetStrapiUserId() {
+    return _$_fetchAndSetStrapiUserIdAsyncAction
+        .run(() => super._fetchAndSetStrapiUserId());
   }
 
   late final _$signInWithEmailAndPasswordAsyncAction = AsyncAction(
@@ -96,8 +129,10 @@ mixin _$AuthStore on _AuthStoreBase, Store {
   String toString() {
     return '''
 user: ${user},
+strapiUserId: ${strapiUserId},
 isLoading: ${isLoading},
-errorMessage: ${errorMessage}
+errorMessage: ${errorMessage},
+isLoggedIn: ${isLoggedIn}
     ''';
   }
 }

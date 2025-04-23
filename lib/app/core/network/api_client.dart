@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'interceptors.dart';
+import 'interceptors.dart'; // Assume que interceptors.dart está no mesmo diretório
 
 class ApiClient {
   final Dio _dio;
@@ -17,8 +17,8 @@ class ApiClient {
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
     _dio.interceptors.addAll([
-      AuthInterceptor(firebaseAuth: _firebaseAuth),
-      LoggingInterceptor(),
+      AuthInterceptor(firebaseAuth: _firebaseAuth), // Vem de interceptors.dart
+      LoggingInterceptor(), // Vem de interceptors.dart
     ]);
   }
 
@@ -115,10 +115,15 @@ class ApiClient {
   }
 
   void _handleError(DioException e) {
+    // Idealmente, logar isso usando um serviço de logging
+    debugPrint('ApiClient DioError Type: ${e.type}');
     if (e.response != null) {
-      debugPrint('Error data: ${e.response?.data}');
+      debugPrint('ApiClient Error Status Code: ${e.response?.statusCode}');
+      debugPrint('ApiClient Error Data: ${e.response?.data}');
     } else {
-      debugPrint('Error message: ${e.message}');
+      debugPrint('ApiClient Error Message: ${e.message}');
     }
+    // Você pode querer adicionar tratamento de erro mais específico aqui
+    // (ex: lançar exceções customizadas baseadas no status code)
   }
 }

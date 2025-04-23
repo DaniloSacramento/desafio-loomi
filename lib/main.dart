@@ -1,17 +1,21 @@
-import 'package:desafio_loomi/app/core/localization/app_localizations.dart';
+import 'package:desafio_loomi/app/core/routes/app_routes.dart';
+import 'package:desafio_loomi/app/core/routes/route_generator.dart';
+import 'package:desafio_loomi/app/core/themes/app_themes.dart';
 import 'package:desafio_loomi/app/features/splash/presentation/pages/splash_page.dart';
-import 'package:desafio_loomi/firebase_options.dart';
-import 'package:desafio_loomi/teste.dart';
+import 'package:desafio_loomi/injection_container.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+  final prefs = await SharedPreferences.getInstance();
+
+  await Firebase.initializeApp();
+
+  await configureDependencies();
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -20,20 +24,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', 'US'),
-        Locale('pt', 'BR'),
-      ],
+      // localizationsDelegates: const [
+      //   AppLocalizations.delegate,
+      //   GlobalMaterialLocalizations.delegate,
+      //   GlobalWidgetsLocalizations.delegate,
+      // ],
+      // supportedLocales: const [
+      //   Locale('en', 'US'),
+      //   Locale('pt', 'BR'),
+      // ],
       title: 'Desafio Loomi',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: AppThemes.mainTheme,
+      initialRoute: AppRoutes.splash,
+      onGenerateRoute: RouteGenerator.generateRoute,
+      debugShowCheckedModeBanner: false,
       home: const SplashPage(),
     );
   }
