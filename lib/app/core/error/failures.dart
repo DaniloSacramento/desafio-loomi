@@ -6,8 +6,7 @@ abstract class Failure extends Equatable {
   const Failure({this.message});
 
   @override
-  List<Object?> get props =>
-      [message]; // Usa Equatable para facilitar comparações
+  List<Object?> get props => [message];
 }
 
 class ServerFailure extends Failure {
@@ -18,7 +17,6 @@ class ValidationFailure extends Failure {
   const ValidationFailure({required String message}) : super(message: message);
 }
 
-// Falha de conexão com a rede
 class NetworkFailure extends Failure {
   const NetworkFailure({super.message = "No internet connection."});
 }
