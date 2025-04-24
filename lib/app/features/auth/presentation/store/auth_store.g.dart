@@ -48,6 +48,38 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     });
   }
 
+  late final _$isDeletingAccountAtom =
+      Atom(name: '_AuthStoreBase.isDeletingAccount', context: context);
+
+  @override
+  bool get isDeletingAccount {
+    _$isDeletingAccountAtom.reportRead();
+    return super.isDeletingAccount;
+  }
+
+  @override
+  set isDeletingAccount(bool value) {
+    _$isDeletingAccountAtom.reportWrite(value, super.isDeletingAccount, () {
+      super.isDeletingAccount = value;
+    });
+  }
+
+  late final _$deleteAccountErrorAtom =
+      Atom(name: '_AuthStoreBase.deleteAccountError', context: context);
+
+  @override
+  String? get deleteAccountError {
+    _$deleteAccountErrorAtom.reportRead();
+    return super.deleteAccountError;
+  }
+
+  @override
+  set deleteAccountError(String? value) {
+    _$deleteAccountErrorAtom.reportWrite(value, super.deleteAccountError, () {
+      super.deleteAccountError = value;
+    });
+  }
+
   late final _$isLoadingAtom =
       Atom(name: '_AuthStoreBase.isLoading', context: context);
 
@@ -134,6 +166,14 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     return _$signInWithGoogleAsyncAction.run(() => super.signInWithGoogle());
   }
 
+  late final _$signInWithAppleAsyncAction =
+      AsyncAction('_AuthStoreBase.signInWithApple', context: context);
+
+  @override
+  Future<void> signInWithApple() {
+    return _$signInWithAppleAsyncAction.run(() => super.signInWithApple());
+  }
+
   late final _$signOutAsyncAction =
       AsyncAction('_AuthStoreBase.signOut', context: context);
 
@@ -151,6 +191,15 @@ mixin _$AuthStore on _AuthStoreBase, Store {
         .run(() => super.updateUserProfile(username: username));
   }
 
+  late final _$deleteUserAccountAsyncAction =
+      AsyncAction('_AuthStoreBase.deleteUserAccount', context: context);
+
+  @override
+  Future<void> deleteUserAccount(String currentPassword) {
+    return _$deleteUserAccountAsyncAction
+        .run(() => super.deleteUserAccount(currentPassword));
+  }
+
   late final _$changePasswordAsyncAction =
       AsyncAction('_AuthStoreBase.changePassword', context: context);
 
@@ -165,6 +214,8 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     return '''
 user: ${user},
 strapiUserId: ${strapiUserId},
+isDeletingAccount: ${isDeletingAccount},
+deleteAccountError: ${deleteAccountError},
 isLoading: ${isLoading},
 errorMessage: ${errorMessage},
 isLoadingProfile: ${isLoadingProfile},

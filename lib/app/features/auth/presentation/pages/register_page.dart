@@ -127,7 +127,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       const SizedBox(width: 10),
                       ElevatedButton(
                         onPressed: () {
-                          print('cliquei');
+                          _authController.signInWithApple(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.appleButton,

@@ -6,12 +6,11 @@ abstract class AuthRepository {
   // Retorna o AppUser customizado ou AppUser.empty
   Stream<AppUser> get user;
 
-  // Métodos para diferentes formas de login/cadastro
   Future<AppUser> updateUserProfile({required String username});
   Future<AppUser> signInWithEmailAndPassword(String email, String password);
   Future<AppUser> signUpWithEmailAndPassword(String email, String password);
   Future<AppUser> signInWithGoogle();
-  Future<AppUser> signInWithApple(); // Se implementado
+  Future<AppUser> signInWithApple();
   Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> signOut();
   Future<void> deleteAccount(

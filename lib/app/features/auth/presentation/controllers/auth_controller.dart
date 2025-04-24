@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:desafio_loomi/app/features/auth/domain/validators/auth_validators.dart';
 import 'package:get_it/get_it.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthController {
   final AuthStore _authStore = getIt<AuthStore>();
@@ -68,6 +69,43 @@ class AuthController {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
+    }
+  }
+
+  Future<void> signInWithApple(BuildContext context) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    // Verifica disponibilidade
+    final isAvailable = await SignInWithApple.isAvailable();
+    if (!isAvailable) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+            content:
+                Text('Login com Apple não está disponível neste dispositivo.')),
+      );
+      return;
+    }
+
+    // Opcional: Iniciar loading
+    // _authStore.isLoading = true;
+
+    try {
+      // Chama a action do AuthStore
+      await _authStore.signInWithApple();
+      // Sucesso! Decide para onde navegar após registro/login com Apple
+      // Pode ser 'onboard' ou 'home', dependendo do seu fluxo
+      Navigator.pushNamedAndRemoveUntil(
+          context, AppRoutes.home, (route) => false); // Ex: vai para home
+    } catch (e) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+            content: Text(
+                'Erro no login com Apple: ${e.toString().replaceFirst('Exception: ', '')}')),
+      );
+      debugPrint('ERRO APPLE SIGN-IN (Register Flow): $e');
+    } finally {
+      // Opcional: Parar loading
+      // _authStore.isLoading = false;
     }
   }
 

@@ -217,26 +217,36 @@ abstract class _AuthStoreBase with Store {
     try {
       isLoading = true;
       errorMessage = null;
-      strapiUserId = null;
-      // Chama o repositório (que faz login Google, Firebase e sincroniza/registra Strapi)
-      final googleUser = await authRepository.signInWithGoogle();
-      // user = googleUser; // Deixe o listener ou force
+      // Chama o repositório (agora retorna AppUser e pode lançar mais erros)
+      final loggedInUser = await authRepository.signInWithGoogle();
+      // O listener (_listenToAuthState) deve pegar o usuário logado,
+      // mas podemos forçar aqui se necessário ou se o listener demorar.
+      // user = loggedInUser;
       print(
-          "AuthStore: Google Sign In successful in Repo. User ID: ${googleUser.id}");
-
-      // **Busca o perfil Strapi APÓS login Google bem-sucedido**
-      if (isLoggedIn) {
-        await _fetchAndSyncStrapiProfile();
-      } else {
-        print(
-            "AuthStore Warning: isLoggedIn is false immediately after successful repo call in signInWithGoogle.");
-        if (googleUser.id.isNotEmpty) {
-          user = googleUser;
-          await _fetchAndSyncStrapiProfile();
-        }
-      }
+          "AuthStore: Google Sign In successful in Repo. User: ${loggedInUser.name}");
+      // A busca do perfil Strapi já acontece DENTRO do método do repositório agora
     } catch (e) {
       print("AuthStore: Error during Google Sign In: ${e.toString()}");
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      user = AppUser.empty(); // Garante estado de logout no erro
+      strapiUserId = null;
+      rethrow;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> signInWithApple() async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      final loggedInUser = await authRepository.signInWithApple();
+      print(
+          "AuthStore: Apple Sign In successful in Repo. User: ${loggedInUser.name}");
+      // user = loggedInUser; // Deixar listener cuidar
+    } catch (e) {
+      print("AuthStore: Error during Apple Sign In: ${e.toString()}");
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       user = AppUser.empty();
       strapiUserId = null;
@@ -245,8 +255,6 @@ abstract class _AuthStoreBase with Store {
       isLoading = false;
     }
   }
-
-  //signInWithApple (se implementado, fazer o mesmo)
 
   @action
   Future<void> signOut() async {

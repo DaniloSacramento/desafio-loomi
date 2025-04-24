@@ -159,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(width: 10),
                       ElevatedButton(
                         onPressed: () {
-                          print('cliquei');
+                          _loginController.signInWithApple(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.appleButton,
