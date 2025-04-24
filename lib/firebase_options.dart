@@ -50,19 +50,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDdMafQh1v_noufxN5BfNvJ1K1buMaKrsI',
-    appId: '1:683386073225:android:b1df3615f0456da7db1658',
-    messagingSenderId: '683386073225',
-    projectId: 'desafioloomi',
-    storageBucket: 'desafioloomi.firebasestorage.app',
+    apiKey: 'AIzaSyAHfsGU0-XC1rWd2PiBe245eOeethkP2tQ', // <-- NOVO VALOR
+    appId: '1:787952710825:android:d65eb905a7dcfac58b25b8', // <-- NOVO VALOR
+    messagingSenderId: '787952710825', // <-- NOVO VALOR (project_number)
+    projectId: 'untold-app-prod', // <-- NOVO VALOR
+    storageBucket: 'untold-app-prod.appspot.com', // <-- NOVO VALOR
   );
 
+  // --- VALORES PARA IOS (vindos do GoogleService-Info.plist) ---
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBZVK_VikpfOFHfq8fnAU5cZ52b1eXrIPI',
-    appId: '1:683386073225:ios:07e27e292ea1c6e4db1658',
-    messagingSenderId: '683386073225',
-    projectId: 'desafioloomi',
-    storageBucket: 'desafioloomi.firebasestorage.app',
-    iosBundleId: 'com.app.untold',
+    apiKey: 'AIzaSyDnRTXKUwPXCDSNbIEmu_9Uwkbb3SVuOcM', // <-- NOVO VALOR
+    appId:
+        '1:787952710825:ios:9b8e987e6e4cabeb8b25b8', // <-- NOVO VALOR (GOOGLE_APP_ID)
+    messagingSenderId: '787952710825', // <-- NOVO VALOR (GCM_SENDER_ID)
+    projectId: 'untold-app-prod', // <-- NOVO VALOR
+    storageBucket: 'untold-app-prod.appspot.com', // <-- NOVO VALOR
+    iosBundleId: 'com.app.untold', // <-- Mantém o mesmo (BUNDLE_ID)
   );
 }

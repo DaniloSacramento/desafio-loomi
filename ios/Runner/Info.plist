@@ -4,17 +4,25 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-	<dict>
-		<key>CFBundleTypeRole</key>
-		<string>Editor</string>
-		<key>CFBundleURLSchemes</key>
-		<array>
-		<string>com.googleusercontent.apps.YOUR_CLIENT_ID</string>
-		</array>
-	</dict>
-	</array>
+	  <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.1234567890-abcdefghijklmnopqrstuvwxyz</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.app.untold</string>
+            </array>
+        </dict>
+    </array>
 	<key>NSCameraUsageDescription</key>
 	<string>Precisamos acessar sua câmera para atualizar sua foto de perfil</string>
 	<key>NSPhotoLibraryUsageDescription</key>

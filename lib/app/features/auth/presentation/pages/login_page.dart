@@ -130,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                   Text(
-                    'Or Sing up With',
+                    'Or Sing in With',
                     style: TextStyle(
                       color: AppColors.grey,
                       fontSize: 12,
@@ -192,7 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.pushNamed(context, AppRoutes.register);
                         },
                         child: const Text(
-                          'Sing in!',
+                          'Sing Up!',
                           style: TextStyle(
                             color: AppColors.buttonPrimary,
                             fontSize: 14,

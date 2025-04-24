@@ -138,6 +138,22 @@ mixin _$AuthStore on _AuthStoreBase, Store {
         .run(() => super._fetchAndSyncStrapiProfile());
   }
 
+  late final _$signInWithGoogleAsyncAction =
+      AsyncAction('_AuthStoreBase.signInWithGoogle', context: context);
+
+  @override
+  Future<AppUser> signInWithGoogle() {
+    return _$signInWithGoogleAsyncAction.run(() => super.signInWithGoogle());
+  }
+
+  late final _$signInWithAppleAsyncAction =
+      AsyncAction('_AuthStoreBase.signInWithApple', context: context);
+
+  @override
+  Future<AppUser> signInWithApple() {
+    return _$signInWithAppleAsyncAction.run(() => super.signInWithApple());
+  }
+
   late final _$signInWithEmailAndPasswordAsyncAction = AsyncAction(
       '_AuthStoreBase.signInWithEmailAndPassword',
       context: context);
@@ -156,22 +172,6 @@ mixin _$AuthStore on _AuthStoreBase, Store {
   Future<void> signUpWithEmailAndPassword(String email, String password) {
     return _$signUpWithEmailAndPasswordAsyncAction
         .run(() => super.signUpWithEmailAndPassword(email, password));
-  }
-
-  late final _$signInWithGoogleAsyncAction =
-      AsyncAction('_AuthStoreBase.signInWithGoogle', context: context);
-
-  @override
-  Future<void> signInWithGoogle() {
-    return _$signInWithGoogleAsyncAction.run(() => super.signInWithGoogle());
-  }
-
-  late final _$signInWithAppleAsyncAction =
-      AsyncAction('_AuthStoreBase.signInWithApple', context: context);
-
-  @override
-  Future<void> signInWithApple() {
-    return _$signInWithAppleAsyncAction.run(() => super.signInWithApple());
   }
 
   late final _$signOutAsyncAction =
@@ -207,6 +207,31 @@ mixin _$AuthStore on _AuthStoreBase, Store {
   Future<void> changePassword(String currentPassword, String newPassword) {
     return _$changePasswordAsyncAction
         .run(() => super.changePassword(currentPassword, newPassword));
+  }
+
+  late final _$_AuthStoreBaseActionController =
+      ActionController(name: '_AuthStoreBase', context: context);
+
+  @override
+  void _clearErrorAndLoading() {
+    final _$actionInfo = _$_AuthStoreBaseActionController.startAction(
+        name: '_AuthStoreBase._clearErrorAndLoading');
+    try {
+      return super._clearErrorAndLoading();
+    } finally {
+      _$_AuthStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void _handleAuthError(dynamic e) {
+    final _$actionInfo = _$_AuthStoreBaseActionController.startAction(
+        name: '_AuthStoreBase._handleAuthError');
+    try {
+      return super._handleAuthError(e);
+    } finally {
+      _$_AuthStoreBaseActionController.endAction(_$actionInfo);
+    }
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:desafio_loomi/app/features/auth/domain/entities/user.dart';
 import 'package:desafio_loomi/app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -29,6 +30,412 @@ class AuthRepositoryImpl implements AuthRepository {
           : AppUser.fromFirebase(firebaseUser);
     });
   }
+
+  @override
+  Future<AppUser> signInWithGoogle() async {
+    UserCredential? userCredential; // Use nullable type initially
+
+    // 1. Processo de Login Google + Firebase
+    try {
+      debugPrint("AuthRepository: Iniciando signInWithGoogle");
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        debugPrint("AuthRepository: Google Sign In cancelado pelo usuário.");
+        // Lança exceção específica para cancelamento se desejar, ou uma genérica
+        throw Exception('Login com Google cancelado');
+      }
+      debugPrint("AuthRepository: Google User obtido: ${googleUser.email}");
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      debugPrint("AuthRepository: Google Authentication obtida.");
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      debugPrint(
+          "AuthRepository: Tentando signInWithCredential no Firebase...");
+      userCredential = await _firebaseAuth.signInWithCredential(credential);
+      debugPrint(
+          "AuthRepository: signInWithCredential Firebase bem-sucedido. User ID: ${userCredential.user?.uid}");
+
+      if (userCredential.user == null) {
+        throw Exception(
+            'Falha ao obter usuário do Firebase após login Google.');
+      }
+    } on FirebaseAuthException catch (e) {
+      debugPrint(
+          "AuthRepository: Erro FirebaseAuthException no Google Sign In: ${e.code} - ${e.message}");
+      if (e.code == 'account-exists-with-different-credential') {
+        throw Exception(
+            'Uma conta já existe com este email, mas usando um método de login diferente.');
+      }
+      // Adicione outros tratamentos específicos se necessário
+      throw _handleFirebaseError(e); // Use seu handler
+    } on Exception catch (e) {
+      // Captura a exceção de cancelamento ou outras
+      debugPrint(
+          "AuthRepository: Erro no fluxo Google/Firebase Sign In: ${e.toString()}");
+      rethrow; // Re-lança a exceção (ex: 'Login com Google cancelado')
+    } catch (e) {
+      debugPrint(
+          "AuthRepository: Erro genérico inesperado no fluxo Google/Firebase Sign In: ${e.toString()}");
+      throw Exception('Falha no login com Google: ${e.toString()}');
+    }
+
+    // --- 2. Sincronização com o Backend (Strapi) ---
+    // Só executa se o login Firebase deu certo e temos userCredential
+    final firebaseUser =
+        userCredential.user!; // Not null por causa das checagens anteriores
+    final firebaseUID = firebaseUser.uid;
+    final email = firebaseUser.email;
+    final username = firebaseUser.displayName?.isNotEmpty == true
+        ? firebaseUser.displayName
+        : email?.split('@')[0];
+
+    if (email == null || email.isEmpty) {
+      debugPrint(
+          "AuthRepository: Email não obtido do Google/Firebase. Não é possível sincronizar com o backend.");
+      await firebaseUser.delete().catchError((_) => debugPrint(
+          "AuthRepository: Falha ao deletar usuário Firebase após email nulo do Google."));
+      throw Exception(
+          'Email não fornecido pelo Google. Não é possível completar o login/registro.');
+    }
+
+    if (username == null || username.isEmpty) {
+      debugPrint(
+          "AuthRepository: Não foi possível determinar um username válido.");
+      await firebaseUser.delete().catchError((_) => debugPrint(
+          "AuthRepository: Falha ao deletar usuário Firebase após username inválido."));
+      throw Exception('Nome de usuário não pôde ser determinado.');
+    }
+
+    // Prepara dados para o Strapi
+    // !!! VERIFICAÇÃO IMPORTANTE !!!
+    // Seu backend Strapi REALMENTE precisa/aceita o campo "password" ao registrar/sincronizar
+    // um usuário via Firebase UID? Se ele ignora ou se baseia apenas no firebase_UID,
+    // enviar um placeholder pode ser desnecessário ou até causar erro 400.
+    // CONFIRME A LÓGICA DO SEU ENDPOINT `/api/auth/local/register` NO STRAPI.
+    final backendRegisterData = {
+      "username": username,
+      "email": email,
+      "password":
+          "GOOGLE_SIGN_IN_PLACEHOLDER_${DateTime.now().millisecondsSinceEpoch}", // <-- CONFIRMAR SE NECESSÁRIO/ACEITO
+      "firebase_UID": firebaseUID
+    };
+
+    // 3. Tenta chamar o backend Strapi POST /api/auth/local/register
+    try {
+      debugPrint(
+          'AuthRepository: Tentando sincronizar/registrar no backend (Strapi) via /auth/local/register para UID: $firebaseUID');
+      await _apiClient.post(
+        '/api/auth/local/register',
+        data: backendRegisterData,
+      );
+      debugPrint(
+          'AuthRepository: Sincronização/Registro no backend bem-sucedida (Status 2xx).');
+      return AppUser.fromFirebase(firebaseUser); // Retorna sucesso
+    } on DioException catch (dioError) {
+      // Verifica se o erro é 400 (provável usuário existente OU erro de validação no Strapi)
+      if (dioError.response?.statusCode == 400) {
+        // LOG DETALHADO para entender o erro 400
+        debugPrint(
+            'AuthRepository: Backend Strapi retornou 400. Resposta: ${dioError.response?.data}');
+        // Verifica se a mensagem de erro INDICA que o usuário já existe (adapte conforme a resposta do seu Strapi)
+        // Exemplo: if (dioError.response?.data['error']?['message']?.contains('already taken')) { ... }
+        // POR ENQUANTO, vamos manter a lógica original de assumir que 400 é "usuário existe"
+        debugPrint(
+            'AuthRepository: Assumindo erro 400 como usuário existente (UID: $firebaseUID). Login/Sincronização OK.');
+        return AppUser.fromFirebase(
+            firebaseUser); // Retorna sucesso (login/sync ok)
+      } else {
+        // Outro erro do Dio (500, 401, 403, timeout, etc.) -> PROBLEMA REAL
+        debugPrint(
+            'AuthRepository: Erro Dio NÃO TRATADO (${dioError.response?.statusCode}) ao sincronizar com Strapi: ${dioError.response?.data ?? dioError.message}');
+        await firebaseUser.delete().catchError((_) => debugPrint(
+            "AuthRepository: Falha ao deletar usuário Firebase após erro Dio NÃO TRATADO do Strapi."));
+        throw Exception(
+            'Falha ao sincronizar com o servidor (${dioError.response?.statusCode}). Detalhes: ${dioError.response?.data?['error']?['message'] ?? dioError.message}');
+      }
+    } catch (e) {
+      debugPrint(
+          'AuthRepository: Erro inesperado ao sincronizar com Strapi: ${e.toString()}');
+      await firebaseUser.delete().catchError((_) => debugPrint(
+          "AuthRepository: Falha ao deletar usuário Firebase após erro inesperado do Strapi."));
+      throw Exception('Erro inesperado ao sincronizar com o servidor.');
+    }
+  }
+// Dentro da classe AuthRepositoryImpl
+
+// NOVA IMPLEMENTAÇÃO signInWithApple - COMPLETA E CORRIGIDA
+  @override
+  Future<AppUser> signInWithApple() async {
+    // IMPORTANTE: Este método só deve ser chamado em plataformas Apple (iOS/macOS)
+    // A UI deve garantir isso (ex: usando Platform.isIOS ou defaultTargetPlatform).
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.iOS &&
+            defaultTargetPlatform != TargetPlatform.macOS)) {
+      // Lança um erro claro se chamado na plataforma errada
+      throw UnsupportedError(
+          'Sign in with Apple não é suportado nativamente nesta plataforma.');
+    }
+
+    // Variável para guardar o usuário Firebase, inicializada como nula
+    User? firebaseUser;
+    // Variável para guardar a credencial original da Apple
+    late final AuthorizationCredentialAppleID
+        appleCredential; // Usamos late final pois será inicializada no try
+
+    // 1. Processo de Login Apple + Firebase
+    try {
+      debugPrint("AuthRepository: Iniciando signInWithApple");
+      // Verifica disponibilidade ANTES de tentar (boa prática)
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) {
+        throw Exception(
+            'Login com Apple não está disponível neste dispositivo.');
+      }
+
+      // --- Obter Credencial da Apple ---
+      // Solicita credenciais da Apple (incluindo email e nome completo)
+      appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        // webAuthenticationOptions: null, // Não necessário/usado em plataformas Apple nativas
+        // Nonce (opcional mas recomendado): Adicionar lógica de geração e validação de nonce aqui se necessário
+      );
+      debugPrint("AuthRepository: Credencial Apple obtida.");
+
+      // --- Criar Credencial Firebase ---
+      final oauthProvider = OAuthProvider('apple.com');
+      final credential = oauthProvider.credential(
+        idToken: appleCredential.identityToken, // Essencial
+        accessToken: appleCredential.authorizationCode, // Pode ser usado também
+        // rawNonce: rawNonce, // Se estiver usando nonce
+      );
+
+      // --- Autenticar no Firebase ---
+      debugPrint(
+          "AuthRepository: Tentando signInWithCredential no Firebase...");
+      // Tenta autenticar ou vincular no Firebase
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
+      debugPrint(
+          "AuthRepository: signInWithCredential Firebase bem-sucedido. User ID: ${userCredential.user?.uid}");
+
+      // Verifica se o usuário foi retornado
+      if (userCredential.user == null) {
+        // Isso não deve acontecer se signInWithCredential for bem-sucedido, mas checamos
+        throw Exception('Falha ao obter usuário do Firebase após login Apple.');
+      }
+      // Define nossa variável firebaseUser com o usuário obtido
+      firebaseUser = userCredential.user!;
+
+      // --- Tentar Atualizar Perfil Firebase (Opcional) ---
+      // Tenta atualizar nome/email no Firebase com dados da Apple (só vem na primeira vez geralmente)
+      bool profileUpdated = false;
+      String? appleName;
+      // Verifica e tenta atualizar Nome
+      if (appleCredential.givenName != null ||
+          appleCredential.familyName != null) {
+        appleName =
+            ('${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}')
+                .trim();
+        // Atualiza apenas se o nome da Apple não estiver vazio e for diferente do nome atual no Firebase
+        if (appleName.isNotEmpty && firebaseUser.displayName != appleName) {
+          debugPrint(
+              "AuthRepository: Atualizando displayName no Firebase com nome da Apple: $appleName");
+          // Tenta atualizar, mas não interrompe o fluxo se falhar
+          await firebaseUser.updateDisplayName(appleName).catchError((e) {
+            debugPrint(
+                "AuthRepository: Falha ao atualizar displayName no Firebase: $e");
+          });
+          profileUpdated = true; // Marca que tentamos atualizar
+        }
+      }
+      // Apenas loga o email da Apple se diferente (não tenta atualizar sem reautenticação)
+      final appleEmail = appleCredential.email;
+      if (appleEmail != null &&
+          appleEmail.isNotEmpty &&
+          firebaseUser.email != appleEmail) {
+        debugPrint(
+            "AuthRepository: Email da Apple ($appleEmail) obtido. Email atual Firebase: (${firebaseUser.email}).");
+        // Poderíamos considerar usar o appleEmail na sincronização Strapi se o firebaseUser.email for nulo ou um relay.
+      }
+
+      // --- Recarregar Usuário Firebase se Perfil foi Atualizado ---
+      // Se tentamos atualizar o perfil (nome), recarregamos para garantir que temos os dados mais recentes
+      if (profileUpdated) {
+        try {
+          debugPrint("AuthRepository: Recarregando usuário Firebase...");
+          await firebaseUser.reload();
+          // Pega a instância do usuário MAIS ATUALIZADA diretamente do FirebaseAuth
+          final updatedFirebaseUser = _firebaseAuth.currentUser;
+          if (updatedFirebaseUser == null) {
+            // Se o reload funcionou, currentUser não deveria ser nulo
+            throw Exception(
+                'Falha ao obter usuário atualizado do Firebase após reload.');
+          }
+          // ATUALIZA a variável local 'firebaseUser' para a versão mais recente
+          firebaseUser = updatedFirebaseUser;
+          debugPrint(
+              "AuthRepository: Usuário Firebase recarregado. Novo nome: ${firebaseUser.displayName}");
+        } catch (e) {
+          // Se o reload falhar, logamos o erro mas continuamos com o 'firebaseUser' que tínhamos antes
+          debugPrint(
+              "AuthRepository: Erro ao recarregar usuário Firebase: $e. Continuando com dados anteriores.");
+        }
+      }
+      // Neste ponto, 'firebaseUser' contém a instância mais atualizada possível do usuário Firebase
+
+      // --- Tratamento de Erros Específicos ---
+      // Captura erros durante o fluxo Apple/Firebase
+    } on FirebaseAuthException catch (e) {
+      debugPrint(
+          "AuthRepository: Erro FirebaseAuthException no Apple Sign In: ${e.code} - ${e.message}");
+      if (e.code == 'account-exists-with-different-credential') {
+        // Erro comum se o usuário já se cadastrou com Google ou Email/Senha usando o mesmo email
+        throw Exception(
+            'Uma conta já existe com este email, mas usando um método de login diferente.');
+      }
+      // Se o erro ocorreu aqui, firebaseUser pode não ter sido definido.
+      // Não tentamos deletar, pois o login/criação não foi completado no Firebase.
+      throw _handleFirebaseError(
+          e); // Usa o handler customizado para traduzir o erro
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // Captura erros específicos da autorização da Apple (ex: cancelado pelo usuário)
+      debugPrint(
+          "AuthRepository: Erro de autorização Apple Sign In: ${e.code} - ${e.message}");
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw Exception('Login com Apple cancelado');
+      } else if (e.code == AuthorizationErrorCode.notInteractive) {
+        throw Exception(
+            'Login com Apple requer interação do usuário.'); // Pode acontecer em contextos específicos
+      }
+      throw Exception(
+          'Falha na autorização com Apple: ${e.message}'); // Outros erros de autorização
+    } catch (e) {
+      // Captura outros erros durante o fluxo Apple/Firebase (ex: disponibilidade, credencial inválida antes do Firebase)
+      debugPrint(
+          "AuthRepository: Erro genérico no fluxo Apple/Firebase Sign In: ${e.toString()}");
+      // Não deletar usuário aqui, pois pode não ter sido criado/logado ainda
+      throw Exception('Falha no login com Apple: ${e.toString()}');
+    }
+
+    // --- 2. Sincronização com o Backend (Strapi) ---
+    // Só chegamos aqui se o login/criação no Firebase foi BEM SUCEDIDO e temos um 'firebaseUser' válido.
+
+    // Se firebaseUser ainda for nulo (verificação extra de segurança, não deveria acontecer)
+    if (firebaseUser == null) {
+      throw Exception(
+          "Erro inesperado: Usuário Firebase nulo após fluxo de login bem-sucedido.");
+    }
+
+    // Prepara dados para enviar ao Strapi
+    final firebaseUID = firebaseUser.uid;
+    // Prioriza email vindo diretamente da Apple se disponível e diferente do Firebase, senão usa o do Firebase
+    // Isso pode ajudar se o usuário usou o relay da Apple e temos o email real aqui.
+    final email = (appleCredential.email != null &&
+            appleCredential.email!.isNotEmpty &&
+            appleCredential.email != firebaseUser.email)
+        ? appleCredential.email
+        : firebaseUser.email; // Usa o email associado à conta Firebase
+    // Usa o nome do Firebase (que tentamos atualizar com o da Apple)
+    final username = firebaseUser.displayName?.isNotEmpty == true
+        ? firebaseUser.displayName
+        : email?.split(
+            '@')[0]; // Fallback para parte do email se nome não disponível
+
+    // Validação Crítica: Email é necessário para o Strapi (conforme sua lógica)
+    if (email == null || email.isEmpty) {
+      debugPrint(
+          "AuthRepository: Email não obtido da Apple/Firebase. Não é possível sincronizar com o backend Strapi.");
+      // Deleta o usuário recém-criado/logado no Firebase, pois não podemos prosseguir sem email para Strapi
+      await firebaseUser.delete().catchError((_) => debugPrint(
+          "AuthRepository: Falha ao deletar usuário Firebase após email nulo da Apple."));
+      // Informa o usuário sobre o problema
+      throw Exception(
+          'Não foi possível obter seu email da Apple ou Firebase. Tente outro método de login.');
+    }
+
+    // Validação Username (se necessário para Strapi)
+    if (username == null || username.isEmpty) {
+      debugPrint(
+          "AuthRepository: Não foi possível determinar um username válido para Apple Sign In.");
+      // Deleta o usuário Firebase se username for obrigatório no Strapi e não puder ser determinado
+      await firebaseUser.delete().catchError((_) => debugPrint(
+          "AuthRepository: Falha ao deletar usuário Firebase após username inválido da Apple."));
+      throw Exception('Nome de usuário não pôde ser determinado.');
+    }
+
+    // Prepara dados para Strapi
+    // !!! VERIFICAÇÃO IMPORTANTE !!!
+    // Seu backend Strapi REALMENTE precisa/aceita o campo "password" ao registrar/sincronizar
+    // um usuário via Firebase UID? Se ele ignora ou se baseia apenas no firebase_UID,
+    // enviar um placeholder pode ser desnecessário ou até causar erro 400.
+    // CONFIRME A LÓGICA DO SEU ENDPOINT `/api/auth/local/register` NO STRAPI.
+    final backendRegisterData = {
+      "username": username,
+      "email":
+          email, // Usa o email que determinamos (pode ser o da Apple ou Firebase)
+      "password":
+          "APPLE_SIGN_IN_PLACEHOLDER_${DateTime.now().millisecondsSinceEpoch}", // <-- CONFIRMAR SE NECESSÁRIO/ACEITO
+      "firebase_UID": firebaseUID
+    };
+
+    // 3. Tenta chamar o backend Strapi POST /api/auth/local/register
+    try {
+      debugPrint(
+          'AuthRepository: Tentando sincronizar/registrar Apple User no Strapi via /auth/local/register para UID: $firebaseUID');
+      // Assumindo que seu ApiClient injeta o token Firebase via interceptor
+      await _apiClient.post(
+        '/api/auth/local/register', // VERIFIQUE SE ESTE É O ENDPOINT CORRETO NO STRAPI
+        data: backendRegisterData,
+      );
+      debugPrint(
+          'AuthRepository: Sincronização/Registro Strapi (Apple) bem-sucedida (Status 2xx).');
+      // Se chegou aqui, Firebase e Strapi (ou sync) OK.
+      return AppUser.fromFirebase(
+          firebaseUser); // Retorna AppUser com base no firebaseUser final
+    } on DioException catch (dioError) {
+      // Trata erro 400 como usuário existente (sucesso para login/sync) - ADAPTE CONFORME SUA API
+      if (dioError.response?.statusCode == 400) {
+        // Log detalhado para entender o 400
+        debugPrint(
+            'AuthRepository: Backend Strapi retornou 400 (Apple). Resposta: ${dioError.response?.data}');
+        // Idealmente, verificar a mensagem específica de erro 400 do Strapi aqui
+        // Ex: if (dioError.response?.data['error']?['message']?.contains('already taken'))
+        debugPrint(
+            'AuthRepository: Assumindo erro 400 como usuário existente (Apple). Login/Sincronização OK.');
+        // Considera sucesso, pois o usuário existe no Strapi e está logado no Firebase
+        return AppUser.fromFirebase(firebaseUser); // Sucesso (login/sync ok)
+      } else {
+        // Outro erro Dio -> PROBLEMA REAL
+        debugPrint(
+            'AuthRepository: Erro Dio NÃO TRATADO (${dioError.response?.statusCode}) ao sincronizar Apple User com Strapi: ${dioError.response?.data ?? dioError.message}');
+        // DELETA o usuário do Firebase para consistência, pois Strapi falhou
+        await firebaseUser.delete().catchError((_) => debugPrint(
+            "AuthRepository: Falha ao deletar usuário Firebase após erro Dio NÃO TRATADO do Strapi (Apple)."));
+        // Lança uma exceção clara
+        throw Exception(
+            'Falha ao sincronizar Apple User com o servidor (${dioError.response?.statusCode}). Detalhes: ${dioError.response?.data?['error']?['message'] ?? dioError.message}');
+      }
+    } catch (e) {
+      // Outro erro inesperado durante a chamada ao Strapi
+      debugPrint(
+          'AuthRepository: Erro inesperado ao sincronizar Apple User com Strapi: ${e.toString()}');
+      // DELETA o usuário do Firebase para consistência
+      await firebaseUser.delete().catchError((_) => debugPrint(
+          "AuthRepository: Falha ao deletar usuário Firebase após erro inesperado do Strapi (Apple)."));
+      throw Exception(
+          'Erro inesperado ao sincronizar Apple User com o servidor.');
+    }
+  } // Fim do método signInWithApple
 
   @override
   Future<void> changePassword(
@@ -151,301 +558,6 @@ class AuthRepositoryImpl implements AuthRepository {
       print('Erro inesperado ao registrar no backend: ${e.toString()}');
       throw Exception(
           'Erro inesperado ao sincronizar usuário com servidor backend.');
-    }
-  }
-
-  @override
-  Future<AppUser> signInWithGoogle() async {
-    UserCredential? userCredential; // Use nullable type initially
-
-    // 1. Processo de Login Google + Firebase
-    try {
-      debugPrint("AuthRepository: Iniciando signInWithGoogle");
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
-      if (googleUser == null) {
-        debugPrint(
-            "AuthRepository: Google Sign In cancelado pelo usu\u00E1rio.");
-        throw Exception('Login com Google cancelado'); // Throw early
-      }
-      debugPrint("AuthRepository: Google User obtido: ${googleUser.email}");
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      debugPrint("AuthRepository: Google Authentication obtida.");
-
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      debugPrint(
-          "AuthRepository: Tentando signInWithCredential no Firebase...");
-      userCredential =
-          await _firebaseAuth.signInWithCredential(credential); // Assign here
-      debugPrint(
-          "AuthRepository: signInWithCredential Firebase bem-sucedido. User ID: ${userCredential.user?.uid}");
-
-      if (userCredential.user == null) {
-        // Should not happen if signInWithCredential succeeded, but check anyway
-        throw Exception(
-            'Falha ao obter usuário do Firebase após login Google.');
-      }
-    } on FirebaseAuthException catch (e) {
-      // Catch Firebase specific errors
-      debugPrint(
-          "AuthRepository: Erro FirebaseAuthException no Google Sign In: ${e.code} - ${e.message}");
-      throw _handleFirebaseError(e); // Use your handler
-    } catch (e) {
-      // Catch other errors during Google/Firebase flow
-      debugPrint(
-          "AuthRepository: Erro gen\u00E9rico no fluxo Google/Firebase Sign In: ${e.toString()}");
-      throw Exception('Falha no login com Google: ${e.toString()}');
-    }
-
-    // --- 2. Sincronização com o Backend (Strapi) ---
-    // Só executa se o login Firebase deu certo e temos userCredential
-    final firebaseUser =
-        userCredential.user!; // Not null because of checks above
-    final firebaseUID = firebaseUser.uid;
-    final email = firebaseUser.email;
-    // Usa o nome vindo do Google (já sincronizado com Firebase) ou deriva do email
-    final username = firebaseUser.displayName?.isNotEmpty == true
-        ? firebaseUser.displayName
-        : email?.split('@')[0];
-
-    // Validação Crítica: Email é necessário para o registro no Strapi
-    if (email == null || email.isEmpty) {
-      debugPrint(
-          "AuthRepository: Email n\u00E3o obtido do Google/Firebase. N\u00E3o \u00E9 poss\u00EDvel sincronizar com o backend.");
-      // Deleta o usuário do Firebase criado/logado via Google, pois não podemos registrar no Strapi
-      await firebaseUser.delete().catchError((_) => debugPrint(
-          "AuthRepository: Falha ao deletar usuário Firebase após email nulo do Google.")); // Tenta deletar
-      throw Exception(
-          'Email n\u00E3o fornecido pelo Google. N\u00E3o \u00E9 poss\u00EDvel completar o login/registro.');
-    }
-
-    // Validação do Username (caso o email não tenha '@')
-    if (username == null || username.isEmpty) {
-      debugPrint(
-          "AuthRepository: N\u00E3o foi poss\u00EDvel determinar um username v\u00E1lido.");
-      await firebaseUser.delete().catchError((_) => debugPrint(
-          "AuthRepository: Falha ao deletar usuário Firebase após username inv\u00E1lido.")); // Tenta deletar
-      throw Exception(
-          'Nome de usu\u00E1rio n\u00E3o p\u00F4de ser determinado.');
-    }
-
-    // Prepara dados para o Strapi
-    final backendRegisterData = {
-      "username": username,
-      "email": email,
-      // Senha placeholder - confirme se Strapi ignora isso com firebase_UID
-      "password":
-          "GOOGLE_SIGN_IN_PLACEHOLDER_${DateTime.now().millisecondsSinceEpoch}",
-      "firebase_UID": firebaseUID
-    };
-
-    // 3. Tenta chamar o backend Strapi POST /api/auth/local/register
-    try {
-      debugPrint(
-          'AuthRepository: Tentando sincronizar/registrar no backend (Strapi) via /auth/local/register para UID: $firebaseUID');
-      await _apiClient.post(
-        '/api/auth/local/register',
-        data: backendRegisterData,
-      );
-      debugPrint(
-          'AuthRepository: Sincroniza\u00E7\u00E3o/Registro no backend bem-sucedida (Status 2xx).');
-      // Se chegou aqui, tudo certo (ou era um usuário novo ou um existente que foi apenas "sincronizado")
-      return AppUser.fromFirebase(firebaseUser); // Retorna sucesso
-    } on DioException catch (dioError) {
-      // Verifica se o erro é 400 (provável usuário existente)
-      // Idealmente, verificar a mensagem de erro específica do Strapi se possível
-      if (dioError.response?.statusCode ==
-          400 /* && dioError.response?.data['error']?['message']?.contains('already taken') */) {
-        debugPrint(
-            'AuthRepository: Backend Strapi retornou ${dioError.response?.statusCode}. Usu\u00E1rio provavelmente j\u00E1 existe (UID: $firebaseUID). Login/Sincroniza\u00E7\u00E3o OK.');
-        // IGNORA O ERRO 400 - Consideramos sucesso, pois o usuário existe e está logado no Firebase
-        return AppUser.fromFirebase(firebaseUser); // Retorna sucesso
-      } else {
-        // Outro erro do Dio (500, 401, 403, timeout, etc.) -> PROBLEMA REAL
-        debugPrint(
-            'AuthRepository: Erro Dio N\u00C3O TRATADO (${dioError.response?.statusCode}) ao sincronizar com Strapi: ${dioError.response?.data ?? dioError.message}');
-        // DELETA o usuário do Firebase para consistência
-        await firebaseUser.delete().catchError((_) => debugPrint(
-            "AuthRepository: Falha ao deletar usuário Firebase após erro Dio N\u00C3O TRATADO do Strapi."));
-        throw Exception(
-            'Falha ao sincronizar com o servidor (${dioError.response?.statusCode}). Detalhes: ${dioError.response?.data?['error']?['message'] ?? dioError.message}');
-      }
-    } catch (e) {
-      // Outro erro inesperado durante a chamada ao Strapi
-      debugPrint(
-          'AuthRepository: Erro inesperado ao sincronizar com Strapi: ${e.toString()}');
-      // DELETA o usuário do Firebase para consistência
-      await firebaseUser.delete().catchError((_) => debugPrint(
-          "AuthRepository: Falha ao deletar usuário Firebase após erro inesperado do Strapi."));
-      throw Exception('Erro inesperado ao sincronizar com o servidor.');
-    }
-  }
-
-  @override
-  Future<AppUser> signInWithApple() async {
-    UserCredential? userCredential; // Nullable inicial
-
-    // 1. Processo de Login Apple + Firebase
-    try {
-      debugPrint("AuthRepository: Iniciando signInWithApple");
-      // Solicita credenciais da Apple (incluindo email e nome completo)
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-      debugPrint("AuthRepository: Credencial Apple obtida.");
-
-      // Cria credencial OAuth para Firebase
-      final oauthProvider = OAuthProvider('apple.com');
-      final credential = oauthProvider.credential(
-        idToken: appleCredential.identityToken, // Essencial
-        // rawNonce: appleCredential.nonce, // Adicione se você gerar e usar nonces
-        accessToken:
-            appleCredential.authorizationCode, // Ou accessToken se aplicável
-      );
-
-      debugPrint(
-          "AuthRepository: Tentando signInWithCredential no Firebase...");
-      userCredential = await _firebaseAuth.signInWithCredential(credential);
-      debugPrint(
-          "AuthRepository: signInWithCredential Firebase bem-sucedido. User ID: ${userCredential.user?.uid}");
-
-      if (userCredential.user == null) {
-        throw Exception('Falha ao obter usuário do Firebase após login Apple.');
-      }
-
-      // Tenta atualizar nome/email no Firebase com dados da Apple (só vem na primeira vez geralmente)
-      final firebaseUser = userCredential.user!;
-      bool profileUpdated = false;
-      String? appleName;
-      if (appleCredential.givenName != null ||
-          appleCredential.familyName != null) {
-        appleName =
-            ('${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}')
-                .trim();
-        if (appleName.isNotEmpty && firebaseUser.displayName != appleName) {
-          debugPrint(
-              "AuthRepository: Atualizando displayName no Firebase com nome da Apple: $appleName");
-          await firebaseUser.updateDisplayName(appleName);
-          profileUpdated = true;
-        }
-      }
-      // Email da Apple (pode ser nulo ou o relay privado)
-      final appleEmail = appleCredential.email;
-      if (appleEmail != null &&
-          appleEmail.isNotEmpty &&
-          firebaseUser.email != appleEmail) {
-        // Cuidado: Atualizar email pode exigir verificação
-        // Por segurança, vamos apenas logar por enquanto se for diferente
-        debugPrint(
-            "AuthRepository: Email da Apple ($appleEmail) diferente do Firebase (${firebaseUser.email}). Atualização manual pode ser necessária se desejado.");
-        // await firebaseUser.updateEmail(appleEmail); // NÃO FAZER SEM REAUTENTICAÇÃO/VERIFICAÇÃO
-        // profileUpdated = true;
-      }
-
-      // Recarrega o usuário se o perfil foi atualizado para pegar os dados mais recentes
-      if (profileUpdated) {
-        await firebaseUser.reload();
-        userCredential = await _firebaseAuth
-            .signInWithCredential(credential); // Re-obtém credencial atualizada
-        debugPrint(
-            "AuthRepository: Usuário Firebase recarregado após atualização do perfil.");
-        if (userCredential.user == null)
-          throw Exception(
-              'Falha ao recarregar usuário Firebase.'); // Check de novo
-      }
-    } on FirebaseAuthException catch (e) {
-      debugPrint(
-          "AuthRepository: Erro FirebaseAuthException no Apple Sign In: ${e.code} - ${e.message}");
-      throw _handleFirebaseError(e);
-    } catch (e) {
-      debugPrint(
-          "AuthRepository: Erro gen\u00E9rico no fluxo Apple/Firebase Sign In: ${e.toString()}");
-      // Pode ser erro de configuração nativa, usuário cancelou, etc.
-      throw Exception('Falha no login com Apple: ${e.toString()}');
-    }
-
-    // --- 2. Sincronização com o Backend (Strapi) ---
-    final firebaseUser = userCredential.user!; // Not null
-    final firebaseUID = firebaseUser.uid;
-    final email =
-        firebaseUser.email; // Pode ser nulo se a Apple não fornecer/esconder
-    // Usa o nome do Firebase (que tentamos atualizar com o da Apple) ou deriva do email
-    final username = firebaseUser.displayName?.isNotEmpty == true
-        ? firebaseUser.displayName
-        : email?.split('@')[0];
-
-    // Validação Crítica: Email
-    if (email == null || email.isEmpty) {
-      debugPrint(
-          "AuthRepository: Email n\u00E3o obtido da Apple/Firebase. N\u00E3o \u00E9 poss\u00EDvel sincronizar com o backend Strapi.");
-      await firebaseUser.delete().catchError((_) => debugPrint(
-          "AuthRepository: Falha ao deletar usuário Firebase após email nulo da Apple."));
-      throw Exception(
-          'Email n\u00E3o fornecido pela Apple. N\u00E3o \u00E9 poss\u00EDvel completar o login/registro.');
-    }
-
-    // Validação Username
-    if (username == null || username.isEmpty) {
-      debugPrint(
-          "AuthRepository: N\u00E3o foi poss\u00EDvel determinar um username v\u00E1lido para Apple Sign In.");
-      await firebaseUser.delete().catchError((_) => debugPrint(
-          "AuthRepository: Falha ao deletar usuário Firebase após username inv\u00E1lido da Apple."));
-      throw Exception(
-          'Nome de usu\u00E1rio n\u00E3o p\u00F4de ser determinado.');
-    }
-
-    // Prepara dados para Strapi
-    final backendRegisterData = {
-      "username": username,
-      "email": email,
-      "password":
-          "APPLE_SIGN_IN_PLACEHOLDER_${DateTime.now().millisecondsSinceEpoch}",
-      "firebase_UID": firebaseUID
-    };
-
-    // 3. Tenta chamar o backend Strapi POST /api/auth/local/register
-    try {
-      debugPrint(
-          'AuthRepository: Tentando sincronizar/registrar Apple User no Strapi via /auth/local/register para UID: $firebaseUID');
-      await _apiClient.post(
-        '/api/auth/local/register',
-        data: backendRegisterData,
-      );
-      debugPrint(
-          'AuthRepository: Sincroniza\u00E7\u00E3o/Registro Strapi (Apple) bem-sucedida (Status 2xx).');
-      return AppUser.fromFirebase(firebaseUser); // Sucesso
-    } on DioException catch (dioError) {
-      // Trata erro 400 como usuário existente (sucesso para login/sync)
-      if (dioError.response?.statusCode == 400) {
-        debugPrint(
-            'AuthRepository: Backend Strapi retornou ${dioError.response?.statusCode} (Apple). Usu\u00E1rio provavelmente j\u00E1 existe. Login/Sincroniza\u00E7\u00E3o OK.');
-        return AppUser.fromFirebase(firebaseUser); // Sucesso
-      } else {
-        // Outro erro Dio
-        debugPrint(
-            'AuthRepository: Erro Dio N\u00C3O TRATADO (${dioError.response?.statusCode}) ao sincronizar Apple User com Strapi: ${dioError.response?.data ?? dioError.message}');
-        await firebaseUser.delete().catchError((_) => debugPrint(
-            "AuthRepository: Falha ao deletar usuário Firebase após erro Dio N\u00C3O TRATADO do Strapi (Apple)."));
-        throw Exception(
-            'Falha ao sincronizar Apple User com o servidor (${dioError.response?.statusCode}). Detalhes: ${dioError.response?.data?['error']?['message'] ?? dioError.message}');
-      }
-    } catch (e) {
-      // Outro erro inesperado
-      debugPrint(
-          'AuthRepository: Erro inesperado ao sincronizar Apple User com Strapi: ${e.toString()}');
-      await firebaseUser.delete().catchError((_) => debugPrint(
-          "AuthRepository: Falha ao deletar usuário Firebase após erro inesperado do Strapi (Apple)."));
-      throw Exception(
-          'Erro inesperado ao sincronizar Apple User com o servidor.');
     }
   }
 

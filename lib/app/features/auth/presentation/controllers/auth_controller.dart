@@ -72,52 +72,55 @@ class AuthController {
     }
   }
 
-  Future<void> signInWithApple(BuildContext context) async {
+  Future<void> signInWithGoogle(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    // Verifica disponibilidade
-    final isAvailable = await SignInWithApple.isAvailable();
-    if (!isAvailable) {
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(
-            content:
-                Text('Login com Apple não está disponível neste dispositivo.')),
-      );
-      return;
-    }
-
-    // Opcional: Iniciar loading
-    // _authStore.isLoading = true;
-
     try {
-      // Chama a action do AuthStore
-      await _authStore.signInWithApple();
-      // Sucesso! Decide para onde navegar após registro/login com Apple
-      // Pode ser 'onboard' ou 'home', dependendo do seu fluxo
-      Navigator.pushNamedAndRemoveUntil(
-          context, AppRoutes.home, (route) => false); // Ex: vai para home
+      final user = await _authStore.signInWithGoogle();
+      print(
+          'AuthController: Login/Registro com Google bem-sucedido. User: ${user.name}');
+      if (context.mounted) {
+        // Navega para Home após sucesso com Google
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.home, (route) => false);
+      }
     } catch (e) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-            content: Text(
-                'Erro no login com Apple: ${e.toString().replaceFirst('Exception: ', '')}')),
-      );
-      debugPrint('ERRO APPLE SIGN-IN (Register Flow): $e');
-    } finally {
-      // Opcional: Parar loading
-      // _authStore.isLoading = false;
+      print('AuthController: Erro no Google Sign-In - $e');
+      if (context.mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Erro no login com Google: ${e.toString().replaceFirst('Exception: ', '')}')),
+        );
+      }
     }
   }
 
-  Future<void> signInWithGoogle(BuildContext context) async {
+  // NOVO MÉTODO para Apple Sign-In (Registro/Login)
+  Future<void> signInWithApple(BuildContext context) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
-      final user = await _authStore.signInWithGoogle();
-      Navigator.pushNamed(context, AppRoutes.home);
+      final user = await _authStore.signInWithApple();
+      print(
+          'AuthController: Login/Registro com Apple bem-sucedido. User: ${user.name}');
+      if (context.mounted) {
+        // Navega para Home após sucesso com Apple
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.home, (route) => false);
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro no login: ${e.toString()}')),
-      );
-      debugPrint('ERRO GOOGLE SIGN-IN: $e');
+      print('AuthController: Erro no Apple Sign-In - $e');
+      if (context.mounted) {
+        // Não mostrar erro de 'webAuthenticationOptions' para o usuário final
+        // A UI já deve prevenir a chamada no Android
+        String errorMessage = e.toString().replaceFirst('Exception: ', '');
+        if (errorMessage.contains('webAuthenticationOptions')) {
+          errorMessage =
+              'Login com Apple não suportado neste dispositivo.'; // Mensagem mais amigável
+        }
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Erro no login com Apple: $errorMessage')),
+        );
+      }
     }
   }
 

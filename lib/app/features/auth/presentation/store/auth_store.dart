@@ -137,6 +137,64 @@ abstract class _AuthStoreBase with Store {
   }
 
   @action
+  void _clearErrorAndLoading() {
+    errorMessage = null;
+    isLoading = false;
+  }
+
+  // Método auxiliar para tratar erros e limpar estado do usuário
+  @action
+  void _handleAuthError(dynamic e) {
+    print("AuthStore: Error occurred - ${e.toString()}");
+    errorMessage = e.toString().replaceFirst('Exception: ', '');
+    user = AppUser.empty(); // Garante estado de logout no erro
+    strapiUserId = null;
+    isLoading = false;
+  }
+
+  @action
+  Future<AppUser> signInWithGoogle() async {
+    isLoading = true;
+    errorMessage = null;
+    strapiUserId = null; // Limpa ID Strapi antigo
+    try {
+      // Chama o repositório (que faz Firebase + Sync Strapi)
+      final loggedInUser = await authRepository.signInWithGoogle();
+      // O listener (_listenToAuthState) deve pegar o usuário logado
+      // e chamar _fetchAndSyncStrapiProfile se necessário.
+      // Não precisamos forçar a atualização aqui, pois o repo já retorna o AppUser.
+      // A busca do perfil Strapi via /api/users/me ainda pode ser útil via listener
+      // para pegar dados adicionais do Strapi não vindos do Firebase.
+      print(
+          "AuthStore: Google Sign In successful in Repo. User: ${loggedInUser.name}");
+      _clearErrorAndLoading(); // Limpa erro e loading no sucesso
+      return loggedInUser; // Retorna o usuário para a UI/Controller, se necessário
+    } catch (e) {
+      _handleAuthError(e); // Usa handler centralizado
+      // O rethrow já está dentro do _handleAuthError
+      throw e; // Necessário por causa do tipo de retorno Future<AppUser>
+    }
+  }
+
+  // NOVA ACTION signInWithApple
+  @action
+  Future<AppUser> signInWithApple() async {
+    isLoading = true;
+    errorMessage = null;
+    strapiUserId = null;
+    try {
+      final loggedInUser = await authRepository.signInWithApple();
+      print(
+          "AuthStore: Apple Sign In successful in Repo. User: ${loggedInUser.name}");
+      _clearErrorAndLoading();
+      return loggedInUser;
+    } catch (e) {
+      _handleAuthError(e);
+      throw e;
+    }
+  }
+
+  @action
   Future<void> signInWithEmailAndPassword(String email, String password) async {
     try {
       isLoading = true;
@@ -203,50 +261,6 @@ abstract class _AuthStoreBase with Store {
       }
     } catch (e) {
       print("AuthStore: Error during Email/Pass Sign Up: ${e.toString()}");
-      errorMessage = e.toString().replaceFirst('Exception: ', '');
-      user = AppUser.empty();
-      strapiUserId = null;
-      rethrow;
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  @action
-  Future<void> signInWithGoogle() async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      // Chama o repositório (agora retorna AppUser e pode lançar mais erros)
-      final loggedInUser = await authRepository.signInWithGoogle();
-      // O listener (_listenToAuthState) deve pegar o usuário logado,
-      // mas podemos forçar aqui se necessário ou se o listener demorar.
-      // user = loggedInUser;
-      print(
-          "AuthStore: Google Sign In successful in Repo. User: ${loggedInUser.name}");
-      // A busca do perfil Strapi já acontece DENTRO do método do repositório agora
-    } catch (e) {
-      print("AuthStore: Error during Google Sign In: ${e.toString()}");
-      errorMessage = e.toString().replaceFirst('Exception: ', '');
-      user = AppUser.empty(); // Garante estado de logout no erro
-      strapiUserId = null;
-      rethrow;
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  @action
-  Future<void> signInWithApple() async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      final loggedInUser = await authRepository.signInWithApple();
-      print(
-          "AuthStore: Apple Sign In successful in Repo. User: ${loggedInUser.name}");
-      // user = loggedInUser; // Deixar listener cuidar
-    } catch (e) {
-      print("AuthStore: Error during Apple Sign In: ${e.toString()}");
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       user = AppUser.empty();
       strapiUserId = null;
