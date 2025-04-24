@@ -7,6 +7,8 @@ import 'package:desafio_loomi/app/features/auth/presentation/store/auth_store.da
 import 'package:desafio_loomi/app/features/auth/presentation/widgets/custom_text_form_field.dart';
 import 'package:desafio_loomi/app/widgets/logo_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:get_it/get_it.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -18,7 +20,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   late final AuthController _authController;
-
+  final AuthStore _authStore = GetIt.instance<AuthStore>();
   @override
   void initState() {
     super.initState();
@@ -190,20 +192,60 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _authController.registerWithEmailAndPassword(context);
-                      }
+                  Observer(
+                    builder: (_) {
+                      // Builder que reconstrói quando o estado do store muda
+                      return ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              AppColors.buttonPrimary, // Cor de fundo
+                          foregroundColor:
+                              AppColors.buttonText, // Cor do texto/ícone
+                          minimumSize: const Size(double.infinity,
+                              50), // Faz o botão esticar na largura
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          // Cor quando desabilitado (carregando)
+                          disabledBackgroundColor:
+                              AppColors.buttonPrimary.withOpacity(0.6),
+                          disabledForegroundColor:
+                              AppColors.buttonText.withOpacity(0.7),
+                        ),
+                        // Desabilita o botão se authStore.isLoading for true
+                        onPressed: _authStore.isLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState!.validate()) {
+                                  // Chama o método do controller que chama a action do store
+                                  _authController
+                                      .registerWithEmailAndPassword(context);
+                                }
+                              },
+                        // Define o filho do botão baseado em authStore.isLoading
+                        child: _authStore.isLoading
+                            ? const SizedBox(
+                                // Mostra o indicador de loading
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                // Mostra o texto normal
+                                'Create Account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  // color: AppColors.buttonText, // Já definido no foregroundColor do styleFrom
+                                ),
+                              ),
+                      );
                     },
-                    child: Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.buttonText,
-                      ),
-                    ),
                   ),
                 ],
               ),
