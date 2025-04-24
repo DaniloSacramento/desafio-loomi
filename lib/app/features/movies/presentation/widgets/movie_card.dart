@@ -41,60 +41,35 @@ class MovieCard extends StatelessWidget {
         movie.poster?.largeUrl ?? movie.poster?.mediumUrl ?? movie.poster?.url;
 
     // Estrutura principal do Card
-    return OrientationBuilder(builder: (context, orientation) {
-      // Determina se está em modo retrato
-      bool isPortrait = orientation == Orientation.portrait;
-      // Log para depuração (opcional)
-      // print("MovieCard build - Orientation: $orientation");
-
-      // Ajusta valores com base na orientação
-      double bottomPadding =
-          isPortrait ? 25.0 : 15.0; // Menos padding embaixo em paisagem
-      int synopsisMaxLines =
-          isPortrait ? 3 : 2; // Menos linhas para sinopse em paisagem
-      double titleFontSize = isPortrait ? 22 : 20; // Fonte menor em paisagem
-      double synopsisFontSize = isPortrait ? 14 : 13; // Fonte menor em paisagem
-      double spacingBeforeButtons =
-          isPortrait ? 25.0 : 15.0; // Menos espaço antes dos botões
-
-      // Retorna a estrutura do Card
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24.0),
-          boxShadow: [
-            // Sombra sutil no card
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            )
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24.0),
+        boxShadow: [
+          // Sombra sutil no card
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: ClipRRect(
+        // Corta o conteúdo para as bordas arredondadas
+        borderRadius: BorderRadius.circular(24.0),
+        child: Stack(
+          // Empilha imagem, gradiente e conteúdo
+          fit: StackFit.expand,
+          children: [
+            _buildBackgroundImage(
+                backgroundImageUrl), // Camada de fundo (Imagem)
+            _buildGradientOverlay(screenHeight), // Camada de gradiente
+            _buildContentOverlay(
+                safePadding, context), // Camada de texto e botões
           ],
         ),
-        child: ClipRRect(
-          // Corta o conteúdo para as bordas arredondadas
-          borderRadius: BorderRadius.circular(24.0),
-          child: Stack(
-            // Empilha imagem, gradiente e conteúdo
-            fit: StackFit.expand,
-            children: [
-              _buildBackgroundImage(
-                  backgroundImageUrl), // Camada de fundo (Imagem)
-              _buildGradientOverlay(screenHeight), // Camada de gradiente
-              _buildContentOverlay(
-                  safePadding,
-                  context,
-                  isPortrait,
-                  bottomPadding,
-                  synopsisMaxLines,
-                  titleFontSize,
-                  synopsisFontSize,
-                  spacingBeforeButtons), // Camada de texto e botões
-            ],
-          ),
-        ),
-      );
-    });
+      ),
+    );
   }
 
   // --- Widgets Internos (Helpers) ---
@@ -166,15 +141,7 @@ class MovieCard extends StatelessWidget {
   }
 
   // Constrói a camada de conteúdo (textos e botões)
-  Widget _buildContentOverlay(
-      EdgeInsets safePadding,
-      BuildContext context,
-      bool isPortrait,
-      double bottomPadding,
-      int synopsisMaxLines,
-      double titleFontSize,
-      double synopsisFontSize,
-      double spacingBeforeButtons) {
+  Widget _buildContentOverlay(EdgeInsets safePadding, BuildContext context) {
     return Positioned.fill(
       child: Padding(
         padding: const EdgeInsets.only(

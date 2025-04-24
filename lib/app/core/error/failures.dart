@@ -2,8 +2,7 @@
 import 'package:equatable/equatable.dart'; // Adicione equatable ao pubspec.yaml
 
 abstract class Failure extends Equatable {
-  final String? message; // Mensagem opcional para detalhar o erro
-
+  final String? message;
   const Failure({this.message});
 
   @override
@@ -11,11 +10,12 @@ abstract class Failure extends Equatable {
       [message]; // Usa Equatable para facilitar comparações
 }
 
-// Implementações específicas de Failure
-
-// Falha geral do servidor (ex: erro 500, 403, 404 não tratado especificamente)
 class ServerFailure extends Failure {
   const ServerFailure({super.message});
+}
+
+class ValidationFailure extends Failure {
+  const ValidationFailure({required String message}) : super(message: message);
 }
 
 // Falha de conexão com a rede

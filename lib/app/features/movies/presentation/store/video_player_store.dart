@@ -70,4 +70,3 @@ abstract class _VideoPlayerStoreBase with Store {
     }
   }
 }
-// Lembre-se de rodar build_runner após criar/modificar stores MobX

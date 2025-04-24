@@ -7,14 +7,13 @@ abstract class AuthRepository {
   Stream<AppUser> get user;
 
   // Métodos para diferentes formas de login/cadastro
+  Future<AppUser> updateUserProfile({required String username});
   Future<AppUser> signInWithEmailAndPassword(String email, String password);
   Future<AppUser> signUpWithEmailAndPassword(String email, String password);
   Future<AppUser> signInWithGoogle();
   Future<AppUser> signInWithApple(); // Se implementado
-
-  // Método para logout
+  Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> signOut();
-
-  // Helper para obter o usuário atual de forma síncrona (pode ser null)
-  // AppUser? get currentUser; // Poderia adicionar isso se útil
+  Future<void> deleteAccount(
+      {required String currentPassword, required int strapiUserId});
 }

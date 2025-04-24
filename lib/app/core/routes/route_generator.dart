@@ -4,6 +4,10 @@ import 'package:desafio_loomi/app/features/auth/presentation/pages/onboard_page.
 import 'package:desafio_loomi/app/features/movies/domain/entities/movie_entity.dart';
 import 'package:desafio_loomi/app/features/movies/presentation/pages/home_page.dart';
 import 'package:desafio_loomi/app/features/movies/presentation/pages/video_player_page.dart';
+
+import 'package:desafio_loomi/app/features/user/presentation/pages/change_password_page.dart';
+import 'package:desafio_loomi/app/features/user/presentation/pages/update_user_profile_page.dart';
+import 'package:desafio_loomi/app/features/user/presentation/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:desafio_loomi/app/features/auth/presentation/pages/register_page.dart';
 import 'package:desafio_loomi/app/features/splash/presentation/pages/splash_page.dart';
@@ -14,6 +18,12 @@ class RouteGenerator {
     final args = settings.arguments;
 
     switch (settings.name) {
+      case AppRoutes.profile:
+        return MaterialPageRoute(builder: (_) => const ProfilePage());
+      case AppRoutes.editProfile:
+        return MaterialPageRoute(builder: (_) => const EditUserProfilePage());
+      case AppRoutes.changePassword:
+        return MaterialPageRoute(builder: (_) => const ChangePasswordPage());
       case AppRoutes.splash:
         return MaterialPageRoute(builder: (_) => const SplashPage());
       case AppRoutes.register:
@@ -23,7 +33,6 @@ class RouteGenerator {
       case AppRoutes.onboard:
         return MaterialPageRoute(builder: (_) => const OnboardPage());
       case AppRoutes.videoPlayer:
-        // Verifica se o argumento é do tipo Movie
         if (args is Movie) {
           return MaterialPageRoute(
             builder: (_) => VideoPlayerPage(movie: args),

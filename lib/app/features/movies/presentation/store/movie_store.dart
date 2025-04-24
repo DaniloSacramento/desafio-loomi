@@ -88,25 +88,44 @@ abstract class _MovieStoreBase with Store {
 
   @action
   Future<void> fetchMovies() async {
-    // (Implementation remains the same as before)
+    print("!!!!!! MovieStore.fetchMovies() INICIOU !!!!!!"); // <-- LOG AQUI
     isLoadingMovies = true;
     errorMessage = null;
-    final result = await getMoviesUseCase();
-    result.fold(
-      (failure) {
-        errorMessage = _mapFailureToMessage(failure);
-        movies = ObservableList<Movie>();
-      },
-      (movieList) {
-        movies = ObservableList.of(movieList);
-        if (movies.isNotEmpty && currentPage == 0) {
-          updateBackgroundGradient(forceUpdate: true);
-        } else if (movies.isEmpty) {
-          _resetGradientColors();
-        }
-      },
-    );
-    isLoadingMovies = false;
+    try {
+      // Adicione um try/catch aqui para pegar erros inesperados
+      final result = await getMoviesUseCase();
+      print(
+          "!!!!!! MovieStore.fetchMovies() - getMoviesUseCase RETORNOU !!!!!!"); // <-- LOG AQUI
+      result.fold(
+        (failure) {
+          print(
+              "!!!!!! MovieStore.fetchMovies() - FAILURE: ${failure.runtimeType} !!!!!!"); // <-- LOG AQUI
+          errorMessage = _mapFailureToMessage(failure);
+          movies =
+              ObservableList<Movie>(); // Garante que a lista está vazia no erro
+        },
+        (movieList) {
+          print(
+              "!!!!!! MovieStore.fetchMovies() - SUCCESS: Recebeu ${movieList.length} filmes !!!!!!"); // <-- LOG AQUI
+          movies = ObservableList.of(movieList);
+          if (movies.isNotEmpty && currentPage == 0) {
+            updateBackgroundGradient(forceUpdate: true);
+          } else if (movies.isEmpty) {
+            _resetGradientColors();
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      print(
+          "!!!!!! MovieStore.fetchMovies() - ERRO INESPERADO (catch externo): $e !!!!!!"); // <-- LOG AQUI
+      print("!!!!!! StackTrace: $stackTrace !!!!!!");
+      errorMessage = 'Erro inesperado na Store: $e';
+      movies = ObservableList<Movie>();
+    } finally {
+      isLoadingMovies = false;
+      print(
+          "!!!!!! MovieStore.fetchMovies() FINALIZOU (isLoadingMovies: $isLoadingMovies) !!!!!!"); // <-- LOG AQUI
+    }
   }
 
   @action

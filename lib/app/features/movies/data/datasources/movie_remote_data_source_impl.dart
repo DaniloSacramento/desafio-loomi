@@ -16,25 +16,68 @@ class MovieRemoteDataSourceImpl implements MovieRemoteDataSource {
 
   @override
   Future<List<MovieModel>> getMovies() async {
+    print(
+        "--- [DataSource] Tentando buscar /api/movies?populate=poster ---"); // Log de início
     try {
-      // Use relative path if ApiClient has base URL configured
       final response = await apiClient.get('/api/movies?populate=poster');
-      // If ApiClient doesn't handle base URL:
-      // final response = await apiClient.get('$baseUrl/api/movies?populate=poster');
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => MovieModel.fromJson(json)).toList();
-    } on DioException catch (e) {
-      // Log the error for debugging
       print(
-          'DioError getting movies: ${e.response?.statusCode} - ${e.message}');
-      // Throw a custom exception for the repository layer to catch
+          "--- [DataSource] Sucesso ao buscar /api/movies - Status: ${response.statusCode} ---"); // Log de sucesso
+
+      // Verifica se a resposta contém a chave 'data' e se é uma lista
+      if (response.data != null && response.data['data'] is List) {
+        final List<dynamic> data = response.data['data'];
+        // Verifica se a lista não está vazia antes de mapear
+        if (data.isNotEmpty) {
+          print(
+              "--- [DataSource] Mapeando ${data.length} filmes recebidos ---");
+        } else {
+          print(
+              "--- [DataSource] Recebida lista de filmes vazia do backend ---");
+        }
+        return data.map((json) => MovieModel.fromJson(json)).toList();
+      } else {
+        // Se 'data' não existir ou não for uma lista, lança um erro
+        print(
+            "--- [DataSource] ERRO: Resposta inesperada do backend ao buscar filmes. 'data' não é uma lista ou é nulo. Resposta: ${response.data} ---");
+        throw ServerException(
+            message:
+                'Formato de resposta inválido do servidor ao buscar filmes.');
+      }
+    } on DioException catch (e) {
+      // **** LOGS DETALHADOS ADICIONADOS AQUI ****
+      print('--- [DataSource] ERRO DioException ao buscar /api/movies ---');
+      print('Tipo do Erro: ${e.type}');
+      print('URL da Requisição: ${e.requestOptions.uri}');
+      print('Status Code: ${e.response?.statusCode}'); // Ex: 403, 404, 500?
+      print('Mensagem Status: ${e.response?.statusMessage}');
+      print('Mensagem Dio: ${e.message}');
+      print(
+          'Dados da Resposta (Erro): ${e.response?.data}'); // MUITO IMPORTANTE!
+      // **** FIM DOS LOGS DETALHADOS ****
+
+      // Crie uma mensagem mais útil
+      String detailedMessage = 'Failed to load movies.';
+      if (e.response?.statusCode != null) {
+        detailedMessage += ' Status: ${e.response?.statusCode}';
+      }
+      // Tenta pegar a mensagem de erro específica do Strapi, se houver
+      // Adiciona verificação se response.data é um Map antes de acessar
+      if (e.response?.data is Map &&
+          e.response?.data['error']?['message'] != null) {
+        detailedMessage += ' Details: ${e.response?.data['error']['message']}';
+      } else if (e.message != null) {
+        detailedMessage += ' - ${e.message}'; // Fallback para msg do Dio
+      }
+
+      // Lança a exceção com a mensagem melhorada
+      throw ServerException(message: detailedMessage);
+    } catch (e, stackTrace) {
+      // Adiciona stackTrace para mais detalhes
+      print(
+          '--- [DataSource] Erro inesperado (não DioException) ao buscar /api/movies: $e ---');
+      print('Stack Trace: $stackTrace'); // Loga o stack trace
       throw ServerException(
-          message:
-              'Failed to load movies. ${e.response?.statusMessage ?? e.message}');
-    } catch (e) {
-      print('Unexpected error getting movies: $e');
-      throw ServerException(
-          message: 'An unexpected error occurred while loading movies.');
+          message: 'An unexpected error occurred while loading movies: $e');
     }
   }
 

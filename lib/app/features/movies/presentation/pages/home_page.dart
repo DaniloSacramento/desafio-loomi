@@ -1,3 +1,4 @@
+// lib/features/movies/presentation/pages/home_page.dart
 import 'package:desafio_loomi/app/core/routes/app_routes.dart';
 import 'package:desafio_loomi/app/core/themes/app_colors.dart';
 import 'package:desafio_loomi/app/features/auth/presentation/store/auth_store.dart';
@@ -12,9 +13,6 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:desafio_loomi/app/features/movies/presentation/widgets/rating_bottom_sheet.dart'; // <-- AJUSTE O CAMINHO SE NECESSÁRIO
 
-// Removed MobX import as we only use flutter_mobx here
-// Removed Palette Generator import
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -25,115 +23,91 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   void _handleMovieRateRequest(Movie movie) {
     print("HomePage: Handling rate request for movie ID: ${movie.id}");
-    // A chamada a displayRatingSheet será corrigida no próximo erro
-    displayRatingSheet(
-        context: context,
-        movie: movie,
-        movieStore: movieStore); // << CORREÇÃO DO PRÓXIMO ERRO APLICADA AQUI
+    displayRatingSheet(context: context, movie: movie, movieStore: movieStore);
   }
 
-  // Get the store instance
   final MovieStore movieStore = GetIt.I.get<MovieStore>();
-  // PageController remains managed here as it's purely UI control
   late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    print("!!!!!! HomePage: initState() COMEÇOU !!!!!!");
 
-    // Initialize PageController with viewportFraction
-    // Use the store's currentPage if needed for initialPage, though 0 is typical
+    // **** FORÇA A ORIENTAÇÃO RETRATO AO INICIAR A TELA ****
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
     _pageController = PageController(
       viewportFraction: 0.88,
-      initialPage: movieStore.currentPage, // Start at the stored page index
+      initialPage: movieStore.currentPage,
     );
-
-    // Add listener to notify the store about page changes
     _pageController.addListener(_onPageChanged);
 
-    // Set System UI styles
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark, // For iOS notch area
+      statusBarBrightness: Brightness.dark,
     ));
-    SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.edgeToEdge); // Make app fullscreen
 
-    // Initial data fetching is handled within the store's constructor or an init method
-    // No need for reaction here to trigger gradient, store handles it internally.
+    print(
+        "!!!!!! HomePage: initState() - Chamando movieStore.fetchMovies() !!!!!!");
+    movieStore.fetchMovies();
+
+    print("!!!!!! HomePage: initState() FINALIZOU !!!!!!");
   }
 
   @override
   void dispose() {
-    // Clean up listener and controller
     _pageController.removeListener(_onPageChanged);
     _pageController.dispose();
     super.dispose();
   }
 
-  // Notifies the store when the page controller settles on a new page
   void _onPageChanged() {
     if (_pageController.page == null || !_pageController.hasClients) return;
-    // Round the page value to get the nearest integer index
     int newPage = _pageController.page!.round();
-    // Call the store's action to update the current page and potentially the gradient
     movieStore.setCurrentPage(newPage);
   }
-
-  // --- Build Method ---
 
   @override
   Widget build(BuildContext context) {
     final EdgeInsets safePadding = MediaQuery.of(context).padding;
 
-    // Observer listens to changes in the MovieStore
     return Observer(
       builder: (_) {
-        // Use the gradient colors directly from the store
         final Color gradColor1 = movieStore.gradientColor1;
         final Color gradColor2 = movieStore.gradientColor2;
 
         return Scaffold(
-          backgroundColor: gradColor2, // Base color from store
+          backgroundColor: gradColor2,
           body: AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle.light.copyWith(
-              statusBarColor:
-                  Colors.transparent, // Ensure status bar is transparent
+              statusBarColor: Colors.transparent,
             ),
             child: Stack(
               children: [
-                // --- Background Gradient Layer ---
-                // AnimatedContainer reacts smoothly to color changes from the store
                 AnimatedContainer(
-                  duration:
-                      const Duration(milliseconds: 700), // Animation duration
-                  curve: Curves.easeOut, // Animation curve
+                  duration: const Duration(milliseconds: 700),
+                  curve: Curves.easeOut,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                         colors: [gradColor1, gradColor2],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        stops: const [0.0, 0.85] // Gradient stops
-                        ),
+                        stops: const [0.0, 0.85]),
                   ),
                 ),
-
-                // --- Content Layer (Top Bar + PageView) ---
                 Column(
                   children: [
-                    // --- Top Bar ---
                     _buildTopBar(safePadding, context),
-
-                    // --- "Now Showing" Title ---
                     _buildNowShowingTitle(),
-
-                    // --- PageView Section ---
                     _buildMoviesPageView(),
                   ],
                 ),
-
-                // --- Optional: Loading Indicator for Palette Generation ---
                 if (movieStore.isGeneratingPalette)
                   Positioned(
                       top: safePadding.top + 10,
@@ -153,75 +127,33 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- Helper Widgets for Build Method ---
-
   Widget _buildTopBar(EdgeInsets safePadding, BuildContext context) {
     final authStore = GetIt.I.get<AuthStore>();
     return Padding(
       padding: EdgeInsets.only(
-        top: safePadding.top + 10.0, // Respect safe area + add margin
+        top: safePadding.top + 10.0,
         left: 20.0,
         right: 20.0,
-        bottom: 10.0, // Space before "Now Showing"
+        bottom: 10.0,
       ),
       child: SizedBox(
-        height: kToolbarHeight * 0.8, // Define height for the bar
+        height: kToolbarHeight * 0.8,
         child: Stack(
           alignment: Alignment.center,
           children: [
             Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white70, size: 24),
-                tooltip: 'Logout',
-                onPressed: () async {
-                  // --- Ação de Logout ---
-                  print("HomePage: Logout button pressed.");
-                  try {
-                    await authStore.signOut();
-                    print("HomePage: signOut successful.");
-                    // Navega para a tela de login e remove todas as rotas anteriores
-                    // Verifica se o widget ainda está montado antes de navegar
-                    if (mounted) {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        AppRoutes
-                            .login, // Ou AppRoutes.register, dependendo do seu fluxo
-                        (route) => false, // Remove todas as rotas anteriores
-                      );
-                    }
-                  } catch (e) {
-                    print("HomePage: Error during signOut: $e");
-                    // Mostra erro para o usuário (opcional)
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Erro ao sair: ${e.toString()}')),
-                      );
-                    }
-                  }
-                },
-              ),
-            ),
-            Align(
               alignment: Alignment.center,
               child: const HalfCircleWithLine(
-                // Your custom logo widget
                 size: 30,
                 lineThicknessRatio: 0.1,
                 innerCircleRatio: 0.4,
               ),
             ),
-            // Right Profile Icon
             Align(
               alignment: Alignment.centerRight,
               child: InkWell(
                 onTap: () {
-                  // TODO: Implement profile navigation
-                  print("Navigate to Profile");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Profile action (TODO)')));
-                  // Example: Navigator.pushNamed(context, '/profile');
+                  Navigator.pushNamed(context, AppRoutes.profile);
                 },
                 borderRadius: BorderRadius.circular(20),
                 child: CircleAvatar(
@@ -240,8 +172,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildNowShowingTitle() {
     return const Padding(
-      padding:
-          EdgeInsets.only(left: 33.0, bottom: 10.0), // Adjust padding as needed
+      padding: EdgeInsets.only(left: 33.0, bottom: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -262,49 +193,44 @@ class _HomePageState extends State<HomePage> {
     return Expanded(
       child: Observer(
         builder: (_) {
-          // --- ESTADO DE LOADING ---
-          // Verifica se está carregando E se a lista de filmes está vazia
+          print("--- Building PageView ---");
+          print("isLoadingMovies: ${movieStore.isLoadingMovies}");
+          print("movies.isEmpty: ${movieStore.movies.isEmpty}");
+          print("errorMessage: ${movieStore.errorMessage}");
+
           if (movieStore.isLoadingMovies && movieStore.movies.isEmpty) {
-            // Retorna um PageView preenchido com Skeletons
             return PageView.builder(
-              // Usa um PageController temporário ou o mesmo viewportFraction
-              controller:
-                  PageController(viewportFraction: 0.88), // Mantém a aparência
-              itemCount: 3, // Mostra alguns skeletons para preencher
+              controller: PageController(viewportFraction: 0.88),
+              itemCount: 3,
               itemBuilder: (context, index) {
                 return const Padding(
-                  // Usa o mesmo padding do MovieCard real
                   padding:
                       EdgeInsets.only(top: 0, bottom: 55, left: 8, right: 8),
-                  child: MovieCardSkeleton(), // <<< USA O WIDGET SKELETON
+                  child: MovieCardSkeleton(),
                 );
               },
             );
           }
 
-          // --- ESTADO DE ERRO ---
           if (movieStore.errorMessage != null && movieStore.movies.isEmpty) {
-            return Center(/* ... Mensagem de Erro ... */);
+            return const Center(/* ... Mensagem de Erro ... */);
           }
 
-          // --- ESTADO VAZIO ---
           if (movieStore.movies.isEmpty && !movieStore.isLoadingMovies) {
             return const Center(
                 child: Text(
-              'No movies found.', /*...*/
+              'No movies found.',
             ));
           }
 
-          // --- ESTADO COM CONTEÚDO (MovieCards Reais) ---
           return PageView.builder(
-            controller: _pageController, // Usa o controller principal
+            controller: _pageController,
             itemCount: movieStore.movies.length,
             itemBuilder: (context, index) {
               final movie = movieStore.movies[index];
               final isLiked = movieStore.likedMovieIds.contains(movie.id);
               final isLiking = movieStore.likingInProgress.contains(movie.id);
 
-              // Retorna o MovieCard real quando os dados estão disponíveis
               return Padding(
                 padding: const EdgeInsets.only(
                     top: 0, bottom: 55, left: 8, right: 8),

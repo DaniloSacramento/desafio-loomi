@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  // Cor de fundo dos botões/cards
+  static const Color profileSecondaryText =
+      Color(0xFF8E8E93); // Cor cinza para texto secundário (ex: data)
+  static const Color subscriptionIconBackground =
+      Color(0xFF5856D6); // Roxo para fundo do ícone
+  static const Color tagBackground = Color(0xFF3A3A3C);
+  static const Color buttonText2 = Color(0xFFFFFFFF);
+  static const Color profileOptionBackground = Color(0xFF2C2C2E);
+  static const Color profileOptionText = Colors.white;
   static const Color background = Color(0xFF131418);
   static const Color textPrimary = Color(0xFFD9D9D9);
   static const Color buttonPrimary = Color(0xFFBC4CF1);

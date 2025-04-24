@@ -80,13 +80,30 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     });
   }
 
-  late final _$_fetchAndSetStrapiUserIdAsyncAction =
-      AsyncAction('_AuthStoreBase._fetchAndSetStrapiUserId', context: context);
+  late final _$isLoadingProfileAtom =
+      Atom(name: '_AuthStoreBase.isLoadingProfile', context: context);
 
   @override
-  Future<void> _fetchAndSetStrapiUserId() {
-    return _$_fetchAndSetStrapiUserIdAsyncAction
-        .run(() => super._fetchAndSetStrapiUserId());
+  bool get isLoadingProfile {
+    _$isLoadingProfileAtom.reportRead();
+    return super.isLoadingProfile;
+  }
+
+  @override
+  set isLoadingProfile(bool value) {
+    _$isLoadingProfileAtom.reportWrite(value, super.isLoadingProfile, () {
+      super.isLoadingProfile = value;
+    });
+  }
+
+  late final _$_fetchAndSyncStrapiProfileAsyncAction = AsyncAction(
+      '_AuthStoreBase._fetchAndSyncStrapiProfile',
+      context: context);
+
+  @override
+  Future<void> _fetchAndSyncStrapiProfile() {
+    return _$_fetchAndSyncStrapiProfileAsyncAction
+        .run(() => super._fetchAndSyncStrapiProfile());
   }
 
   late final _$signInWithEmailAndPasswordAsyncAction = AsyncAction(
@@ -125,6 +142,24 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     return _$signOutAsyncAction.run(() => super.signOut());
   }
 
+  late final _$updateUserProfileAsyncAction =
+      AsyncAction('_AuthStoreBase.updateUserProfile', context: context);
+
+  @override
+  Future<void> updateUserProfile({required String username}) {
+    return _$updateUserProfileAsyncAction
+        .run(() => super.updateUserProfile(username: username));
+  }
+
+  late final _$changePasswordAsyncAction =
+      AsyncAction('_AuthStoreBase.changePassword', context: context);
+
+  @override
+  Future<void> changePassword(String currentPassword, String newPassword) {
+    return _$changePasswordAsyncAction
+        .run(() => super.changePassword(currentPassword, newPassword));
+  }
+
   @override
   String toString() {
     return '''
@@ -132,6 +167,7 @@ user: ${user},
 strapiUserId: ${strapiUserId},
 isLoading: ${isLoading},
 errorMessage: ${errorMessage},
+isLoadingProfile: ${isLoadingProfile},
 isLoggedIn: ${isLoggedIn}
     ''';
   }

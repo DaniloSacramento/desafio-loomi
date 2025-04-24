@@ -2,8 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:desafio_loomi/app/features/movies/domain/entities/movie_entity.dart';
-// Ensure correct import for MovieStore and RatingAction if not already correct
-import 'package:desafio_loomi/app/features/movies/presentation/store/movie_store.dart';
+import 'package:desafio_loomi/app/features/movies/presentation/store/movie_store.dart'; // Precisa do MovieStore e RatingAction
 import 'package:desafio_loomi/app/core/themes/app_colors.dart';
 
 // Função PÚBLICA que será chamada pela HomePage
@@ -12,11 +11,16 @@ void displayRatingSheet({
   required Movie movie,
   required MovieStore movieStore,
 }) {
+  final screenHeight = MediaQuery.of(context).size.height;
+  final sheetHeight = screenHeight * 0.35;
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.grey[900]?.withOpacity(0.95),
-    isScrollControlled:
-        true, // Permite altura flexível, crucial for larger content
+    isScrollControlled: true,
+    constraints: BoxConstraints(
+      maxHeight: sheetHeight,
+      minHeight: sheetHeight,
+    ),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
     ),
@@ -40,32 +44,29 @@ class _RatingBottomSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     // Pega o estado atual de like para destacar a opção correta
     final bool isCurrentlyLiked = movieStore.likedMovieIds.contains(movie.id);
-    // TODO: Adicionar lógica se quiser destacar 'dislike' ou 'love it' baseado em estado local futuro
-    //       Ex: final RatingAction? currentRating = movieStore.getRatingForMovie(movie.id);
-
+    final double iconSize = 36.0; // Tamanho maior para os ícones
+    final double textSize = 14.0;
     return Padding(
-      // Padding geral dentro do bottom sheet - AUMENTADO para mais espaço
+      // Padding geral dentro do bottom sheet
       padding: EdgeInsets.only(
-          top: 30.0, // Aumentado de 20.0
-          left: 20.0, // Aumentado de 15.0
-          right: 20.0, // Aumentado de 15.0
-          // Garante espaço abaixo, especialmente se o teclado aparecer (embora improvável aqui)
+          top: 20.0,
+          left: 15.0,
+          right: 15.0,
           bottom: MediaQuery.of(context).viewInsets.bottom +
-              35.0 // Aumentado de 20.0
+              20.0 // Espaço para teclado (se houver) e geral
           ),
       child: Wrap(
         // Wrap permite que os itens quebrem linha se necessário
         alignment: WrapAlignment.center,
         crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 25.0, // Espaço horizontal AUMENTADO de 15.0
-        runSpacing: 20.0, // Espaço vertical entre linhas AUMENTADO de 10.0
+        spacing: 15.0, // Espaço horizontal
+        runSpacing: 10.0, // Espaço vertical entre linhas
         children: <Widget>[
           // Opção Dislike
           _buildRatingOption(
             context: context,
             icon: Icons.thumb_down_outlined,
             label: "It's not for me",
-            // Exemplo: isSelected: currentRating == RatingAction.dislike,
             isSelected: false, // Mudar se tiver estado 'disliked'
             onTap: () {
               Navigator.pop(context);
@@ -77,7 +78,6 @@ class _RatingBottomSheetContent extends StatelessWidget {
             context: context,
             icon: Icons.thumb_up_outlined,
             label: "I Like it",
-            // Exemplo: isSelected: currentRating == RatingAction.like,
             isSelected: isCurrentlyLiked, // Destaca se está curtido
             onTap: () {
               Navigator.pop(context);
@@ -89,23 +89,19 @@ class _RatingBottomSheetContent extends StatelessWidget {
             context: context,
             icon: Icons.favorite_outline, // Ícone de coração
             label: "I love it!",
-            // Exemplo: isSelected: currentRating == RatingAction.loveIt,
             isSelected: false, // Mudar se tiver estado 'loved'
             onTap: () {
               Navigator.pop(context);
               movieStore.rateMovie(movie.id, RatingAction.loveIt);
             },
           ),
-          // Botão Fechar
-          // Adicionado um Padding extra para garantir separação, especialmente se o Wrap quebrar linha
-          Padding(
-            padding: const EdgeInsets.only(
-                left: 15.0, top: 5.0), // Ajuste conforme necessário
+          // Botão Fechar (pode ser um IconButton ou um TextButton)
+          Container(
+            // Container para dar um alinhamento ou espaço se necessário
+            margin: const EdgeInsets.only(left: 10), // Exemplo de margem
             child: IconButton(
-              icon: Icon(Icons.close,
-                  color: AppColors.buttonPrimary), // Tamanho um pouco maior
+              icon: Icon(Icons.close, color: Colors.grey[400], size: 28),
               tooltip: 'Close',
-              padding: const EdgeInsets.all(12.0), // Aumenta a área de toque
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -128,27 +124,25 @@ class _RatingBottomSheetContent extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12), // Raio um pouco maior
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
-        // Padding interno da opção aumentado
-        padding: const EdgeInsets.symmetric(
-            horizontal: 12.0, vertical: 12.0), // Aumentado de 10/8
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(
               icon,
-              size: 35, // Tamanho do ícone AUMENTADO de 30
+              size: 30,
               color: isSelected
                   ? selectedColor
                   : defaultColor, // Muda cor se selecionado
             ),
-            const SizedBox(height: 8), // Espaço AUMENTADO de 6
+            const SizedBox(height: 6),
             Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13, // Tamanho da fonte AUMENTADO de 12
+                fontSize: 12,
                 color: isSelected
                     ? selectedColor
                     : defaultColor, // Muda cor se selecionado

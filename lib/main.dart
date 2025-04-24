@@ -2,6 +2,7 @@ import 'package:desafio_loomi/app/core/routes/app_routes.dart';
 import 'package:desafio_loomi/app/core/routes/route_generator.dart';
 import 'package:desafio_loomi/app/core/themes/app_themes.dart';
 import 'package:desafio_loomi/app/features/splash/presentation/pages/splash_page.dart';
+import 'package:desafio_loomi/firebase_options.dart';
 import 'package:desafio_loomi/injection_container.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
 
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+      // options: DefaultFirebaseOptions.currentPlatform,
+      );
 
   await configureDependencies();
 
