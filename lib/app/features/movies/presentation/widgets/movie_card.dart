@@ -198,17 +198,15 @@ class MovieCard extends StatelessWidget {
     );
   }
 
-  // Constrói a seção com os botões principais (Watch, Rate, Share)
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // --- Botão Watch ---
         ElevatedButton(
-          onPressed: onWatchPressed, // Usa o callback passado
+          onPressed: onWatchPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.buttonText,
+            foregroundColor: AppColors.white,
             minimumSize: const Size(double.infinity, 50),
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(

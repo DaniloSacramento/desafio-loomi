@@ -6,7 +6,7 @@ class Movie {
   final String synopsis;
   final String streamLink;
   final String genre;
-  final Poster? poster; // Pode ser nulo se o populate falhar
+  final Poster? poster;
 
   Movie({
     required this.id,

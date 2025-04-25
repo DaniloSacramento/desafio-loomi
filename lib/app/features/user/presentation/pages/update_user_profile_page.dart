@@ -193,14 +193,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
 
                   // --- Botão Atualizar Perfil ---
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.buttonPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      disabledBackgroundColor:
-                          AppColors.buttonPrimary.withOpacity(0.5),
-                    ),
                     // Observa isLoading e chama action do store
                     onPressed:
                         _store.isLoading ? null : _store.submitUpdateProfile,
@@ -217,7 +209,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.buttonText)),
+                                color: AppColors.white)),
                   ),
                   const SizedBox(height: 20),
                 ],

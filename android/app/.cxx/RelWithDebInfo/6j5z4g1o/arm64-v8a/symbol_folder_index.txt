@@ -1,0 +1,1 @@
+/Users/mackbook-corptech-2/Documents/project/desafio-loomi/build/app/intermediates/cxx/RelWithDebInfo/6j5z4g1o/obj/arm64-v8a

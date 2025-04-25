@@ -53,11 +53,7 @@ class _HomePageState extends State<HomePage> {
       statusBarBrightness: Brightness.dark,
     ));
 
-    print(
-        "!!!!!! HomePage: initState() - Chamando movieStore.fetchMovies() !!!!!!");
     movieStore.fetchMovies();
-
-    print("!!!!!! HomePage: initState() FINALIZOU !!!!!!");
   }
 
   @override

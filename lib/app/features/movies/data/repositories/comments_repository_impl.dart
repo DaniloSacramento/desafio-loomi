@@ -15,10 +15,8 @@ class CommentsRepositoryImpl implements CommentsRepository {
   Stream<Either<Failure, List<CommentEntity>>> getCommentsStream(
       String movieId) {
     return firestoreDataSource.getCommentsStream(movieId).map((comments) {
-      // Se o stream do datasource for bem sucedido, retorna Right
       return Right<Failure, List<CommentEntity>>(comments);
     }).handleError((error) {
-      // Se o stream do datasource emitir um erro
       print("[Repo-Firestore] Erro no stream de comentários: $error");
       if (error is FirebaseException) {
         return Left<Failure, List<CommentEntity>>(
@@ -26,18 +24,12 @@ class CommentsRepositoryImpl implements CommentsRepository {
       }
       return Left<Failure, List<CommentEntity>>(
           ServerFailure(message: "Erro ao carregar comentários."));
-      // IMPORTANTE: Este handle Error pode não ser a forma ideal de transformar
-      // o erro do stream em Either. Uma abordagem mais robusta pode ser necessária
-      // dependendo de como você gerencia erros em Streams na sua arquitetura.
-      // Por simplicidade, estamos mapeando o erro aqui.
     });
-    // Nota: Uma forma mais garantida seria o DataSource retornar o Either diretamente no stream.
   }
 
   @override
   Future<Either<Failure, void>> deleteComment(String commentId) async {
     try {
-      // Optional: Add network check here if you have NetworkInfo
       await firestoreDataSource.deleteComment(commentId);
       return const Right(null); // Success
     } on FirebaseException catch (e) {
@@ -55,7 +47,6 @@ class CommentsRepositoryImpl implements CommentsRepository {
   @override
   Future<Either<Failure, void>> updateComment(
       String commentId, String newText) async {
-    // Adicionar validação básica aqui se necessário (ex: newText não vazio)
     if (newText.trim().isEmpty) {
       return Left(ServerFailure(
           message:
@@ -84,9 +75,7 @@ class CommentsRepositoryImpl implements CommentsRepository {
         'movieId': movieId,
         'userId': userId,
         'userName': userName,
-        // 'userAvatarUrl': authStore.user.avatarUrl, // Pegar avatar do AuthStore se tiver
         'text': text,
-        // Timestamp será adicionado pelo DataSource
       };
       await firestoreDataSource.addComment(commentData);
       return const Right(null); // Sucesso

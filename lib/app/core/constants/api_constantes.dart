@@ -2,19 +2,16 @@ class ApiConstants {
   static const String baseUrl =
       'https://untold-strapi.api.prod.loomi.com.br/api';
 
-  // Autenticação
   static const String register = '$baseUrl/auth/local/register';
   static const String userMe = '$baseUrl/users/me';
   static const String updateUser = '$baseUrl/users/updateMe';
   static String deleteUser(String userId) => '$baseUrl/users/$userId';
 
-  // Filmes
   static const String movies = '$baseUrl/movies';
   static const String likes = '$baseUrl/likes';
   static String deleteLike(String likeId) => '$baseUrl/likes/$likeId';
   static const String subtitles = '$baseUrl/subtitles';
 
-  // Parâmetros de query
   static String moviesWithPoster = '$movies?populate=poster';
   static String likesPopulated = '$likes?populate=*';
   static String subtitlesForMovie(int movieId) =>

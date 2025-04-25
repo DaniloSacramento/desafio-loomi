@@ -78,11 +78,7 @@ abstract class _ChangePasswordStoreBase with Store {
           errorMessage = _mapFailureToMessage(failure); // Set error message
         },
         (_) {
-          // Handle Success
-
           changePasswordSuccess = true; // Set success flag
-          // Optionally clear fields on success
-          // _clearFields();
         },
       );
 
@@ -94,12 +90,10 @@ abstract class _ChangePasswordStoreBase with Store {
     }
   }
 
-  // --- Helper Methods ---
   String? _mapFailureToMessage(Failure failure) {
     if (failure is ServerFailure) {
       return failure.message; // Use message from ServerFailure
     }
-    // Add other failure types if needed (NetworkFailure, etc.)
     return 'An unexpected error occurred.'; // Default message
   }
 
@@ -109,7 +103,6 @@ abstract class _ChangePasswordStoreBase with Store {
     confirmNewPasswordController.clear();
   }
 
-  // --- Dispose Method ---
   void dispose() {
     print("Disposing ChangePasswordStore controllers...");
     currentPasswordController.dispose();
@@ -117,10 +110,6 @@ abstract class _ChangePasswordStoreBase with Store {
     confirmNewPasswordController.dispose();
   }
 
-  // --- Validators (can be accessed directly from the store if needed) ---
-  // Note: It's often cleaner to keep validators in their own file (AuthValidators)
-  // and call them directly from the TextFormField's validator property.
-  // Example of how you *could* have them here:
   String? validateCurrentPassword(String? value) {
     return (value == null || value.isEmpty)
         ? 'Current password is required'

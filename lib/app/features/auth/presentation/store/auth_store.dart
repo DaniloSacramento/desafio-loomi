@@ -21,13 +21,10 @@ abstract class _AuthStoreBase with Store {
   // Listener para estado de autenticação
   void _listenToAuthState() {
     authRepository.user.listen((appUser) {
-      final wasLoggedIn =
-          isLoggedIn; // Verifica se já estava logado antes da atualização
-      user =
-          appUser; // Atualiza o usuário vindo do stream (inicialmente com dados Firebase)
+      final wasLoggedIn = isLoggedIn;
+      user = appUser;
 
       if (isLoggedIn && !wasLoggedIn) {
-        // Acabou de logar (via stream), busca perfil Strapi
         print(
             "AuthStore Listener: User logged in via stream. Fetching Strapi profile.");
         _fetchAndSyncStrapiProfile();
@@ -37,9 +34,7 @@ abstract class _AuthStoreBase with Store {
             "AuthStore Listener: App reopened while logged in. Fetching Strapi profile.");
         _fetchAndSyncStrapiProfile();
       } else if (!isLoggedIn) {
-        // Limpa o ID se deslogar
         strapiUserId = null;
-        // Garante que user seja AppUser.empty() se o stream não o fizer imediatamente
         if (user != AppUser.empty()) {
           user = AppUser.empty();
         }
@@ -62,7 +57,6 @@ abstract class _AuthStoreBase with Store {
   @observable
   String? errorMessage;
 
-  // Flag para loading específico do perfil Strapi (opcional)
   @observable
   bool isLoadingProfile = false;
 
@@ -85,28 +79,19 @@ abstract class _AuthStoreBase with Store {
       if (response.data != null && response.data is Map<String, dynamic>) {
         final strapiData = response.data as Map<String, dynamic>;
 
-        // Extrai os dados do Strapi
         final int? fetchedStrapiId = strapiData['id'] as int?;
-        // IMPORTANTE: Verifique o nome exato do campo no Strapi (pode ser 'username', 'name', etc.)
         final String? fetchedUsername = strapiData['username'] as String?;
         final String? fetchedEmail = strapiData['email'] as String?;
-        // Adicione outros campos que você precise, ex:
-        // final String? fetchedStrapiPhoto = strapiData['profilePicture']?['url'];
 
         print(
             'AuthStore: Strapi data received: ID=$fetchedStrapiId, Username=$fetchedUsername, Email=$fetchedEmail');
 
-        // Atualiza o 'user' observável, priorizando dados do Strapi
-        // Mantém o ID do Firebase (user.id)
         user = AppUser(
-          id: user.id, // Mantém o ID do Firebase que identifica a sessão
-          email: fetchedEmail ??
-              user.email, // Usa email do Strapi, senão mantém o do Firebase
-          name: fetchedUsername ??
-              user.name, // Usa nome do Strapi, senão mantém o do Firebase
+          id: user.id,
+          email: fetchedEmail ?? user.email,
+          name: fetchedUsername ?? user.name,
           photoUrl: user
               .photoUrl, // Mantém a foto do Firebase por enquanto (a menos que Strapi a forneça)
-          // Se Strapi fornecer foto: photoUrl: fetchedStrapiPhoto ?? user.photoUrl,
         );
 
         strapiUserId = fetchedStrapiId; // Atualiza o ID do Strapi
@@ -116,12 +101,8 @@ abstract class _AuthStoreBase with Store {
       } else {
         print(
             'AuthStore: Failed to parse Strapi User Profile from /api/users/me. Response data was not a valid map.');
-        // Opcional: definir uma mensagem de erro específica para falha no perfil
-        // errorMessage = 'Não foi possível carregar os detalhes do perfil.';
       }
     } on DioException catch (e) {
-      // Erro comum é 401 (Não autorizado) se o token não for enviado ou for inválido
-      // ou 403 (Proibido) se o token for válido mas não tiver permissão para /users/me
       print(
           'AuthStore: DioError fetching Strapi User Profile: ${e.response?.statusCode} - ${e.response?.data ?? e.message}');
       errorMessage =
@@ -142,7 +123,6 @@ abstract class _AuthStoreBase with Store {
     isLoading = false;
   }
 
-  // Método auxiliar para tratar erros e limpar estado do usuário
   @action
   void _handleAuthError(dynamic e) {
     print("AuthStore: Error occurred - ${e.toString()}");
@@ -158,20 +138,13 @@ abstract class _AuthStoreBase with Store {
     errorMessage = null;
     strapiUserId = null; // Limpa ID Strapi antigo
     try {
-      // Chama o repositório (que faz Firebase + Sync Strapi)
       final loggedInUser = await authRepository.signInWithGoogle();
-      // O listener (_listenToAuthState) deve pegar o usuário logado
-      // e chamar _fetchAndSyncStrapiProfile se necessário.
-      // Não precisamos forçar a atualização aqui, pois o repo já retorna o AppUser.
-      // A busca do perfil Strapi via /api/users/me ainda pode ser útil via listener
-      // para pegar dados adicionais do Strapi não vindos do Firebase.
       print(
           "AuthStore: Google Sign In successful in Repo. User: ${loggedInUser.name}");
       _clearErrorAndLoading(); // Limpa erro e loading no sucesso
       return loggedInUser; // Retorna o usuário para a UI/Controller, se necessário
     } catch (e) {
       _handleAuthError(e); // Usa handler centralizado
-      // O rethrow já está dentro do _handleAuthError
       throw e; // Necessário por causa do tipo de retorno Future<AppUser>
     }
   }
@@ -203,23 +176,16 @@ abstract class _AuthStoreBase with Store {
       // Chama o repositório (que autentica no Firebase)
       final loggedInUser =
           await authRepository.signInWithEmailAndPassword(email, password);
-      // user = loggedInUser; // O listener do stream geralmente já faz isso, mas pode ser redundante aqui
       print(
           "AuthStore: Email/Pass Sign In successful in Repo. User ID: ${loggedInUser.id}");
 
-      // **Busca o perfil Strapi APÓS login Firebase bem-sucedido**
-      // O listener pode demorar um pouco, então chamar diretamente garante a busca
       if (isLoggedIn) {
-        // Garante que o user foi atualizado pelo stream ou pela linha acima
         await _fetchAndSyncStrapiProfile();
       } else {
         print(
             "AuthStore Warning: isLoggedIn is false immediately after successful repo call in signInWithEmailAndPassword.");
-        // Isso pode indicar um problema de timing com o stream, mas vamos tentar buscar mesmo assim
-        // se loggedInUser.id for válido
         if (loggedInUser.id.isNotEmpty) {
-          user =
-              loggedInUser; // Força a atualização se o stream ainda não o fez
+          user = loggedInUser;
           await _fetchAndSyncStrapiProfile();
         }
       }
@@ -229,7 +195,7 @@ abstract class _AuthStoreBase with Store {
           e.toString().replaceFirst('Exception: ', ''); // Remove 'Exception: '
       user = AppUser.empty();
       strapiUserId = null;
-      rethrow; // Propaga o erro para a UI mostrar
+      rethrow;
     } finally {
       isLoading = false;
     }
@@ -241,14 +207,11 @@ abstract class _AuthStoreBase with Store {
       isLoading = true;
       errorMessage = null;
       strapiUserId = null;
-      // Chama o repositório (que cadastra no Firebase E no Strapi)
       final newUser =
           await authRepository.signUpWithEmailAndPassword(email, password);
-      // user = newUser; // Deixe o listener cuidar disso ou force como no login
       print(
           "AuthStore: Email/Pass Sign Up successful in Repo. User ID: ${newUser.id}");
 
-      // **Busca o perfil Strapi APÓS cadastro bem-sucedido**
       if (isLoggedIn) {
         await _fetchAndSyncStrapiProfile();
       } else {
@@ -272,19 +235,15 @@ abstract class _AuthStoreBase with Store {
 
   @action
   Future<void> signOut() async {
-    // Não precisa buscar perfil aqui
     try {
       isLoading = true;
       await authRepository.signOut();
-      // O listener (_listenToAuthState) deve limpar o user e strapiUserId
       errorMessage = null;
-      // Forçar limpeza caso o listener demore
       user = AppUser.empty();
       strapiUserId = null;
     } catch (e) {
       print("AuthStore: Error during Sign Out: ${e.toString()}");
       errorMessage = e.toString().replaceFirst('Exception: ', '');
-      // Mesmo com erro, força o estado local para deslogado
       user = AppUser.empty();
       strapiUserId = null;
       rethrow;
@@ -295,22 +254,13 @@ abstract class _AuthStoreBase with Store {
 
   @action
   Future<void> updateUserProfile({required String username}) async {
-    // Pode usar isLoading geral ou um específico (ex: isLoadingProfileUpdate)
     isLoading = true;
     errorMessage = null;
     try {
-      // Chama o repositório para atualizar no backend
       final updatedUser =
           await authRepository.updateUserProfile(username: username);
 
-      // Atualiza o 'user' observável localmente com os dados retornados
-      // Isso garante que a UI reflita a mudança imediatamente
       user = updatedUser;
-      // OU, se o repo não retornar o usuário atualizado, atualize manualmente:
-      // user = AppUser(id: user.id, email: user.email, name: username, photoUrl: user.photoUrl);
-
-      // Opcional: Atualizar também o strapiUserId se ele for retornado na resposta
-      // if (updatedUser.strapiId != null) strapiUserId = updatedUser.strapiId;
 
       print(
           "AuthStore: Perfil atualizado com sucesso no repositório e no estado local.");
@@ -340,13 +290,9 @@ abstract class _AuthStoreBase with Store {
           "AuthStore: Chamando repositório para deletar conta (Strapi ID: $strapiUserId)");
       await authRepository.deleteAccount(
         currentPassword: currentPassword,
-        strapiUserId: strapiUserId!, // Usa o ID do Strapi armazenado no store
+        strapiUserId: strapiUserId!,
       );
       print("AuthStore: Exclusão de conta bem-sucedida no repositório.");
-      // O sucesso aqui significa que o usuário foi removido do Firebase também.
-      // O listener `_listenToAuthState` deve detectar a mudança para user=null
-      // e limpar o `strapiUserId` localmente.
-      // A navegação para login será feita na UI após detectar o sucesso.
     } catch (e) {
       print("AuthStore: Erro durante a exclusão da conta - ${e.toString()}");
       final errorMsg = e.toString().replaceFirst('Exception: ', '');

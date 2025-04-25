@@ -1,4 +1,3 @@
-// app/core/error/failures.dart
 import 'package:equatable/equatable.dart'; // Adicione equatable ao pubspec.yaml
 
 abstract class Failure extends Equatable {

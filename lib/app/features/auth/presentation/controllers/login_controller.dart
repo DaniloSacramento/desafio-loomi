@@ -32,11 +32,9 @@ class LoginController {
     }
   }
 
-// MÉTODO ADICIONADO para Google Sign-In
   Future<void> signInWithGoogle(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
-      // Chama a action do AuthStore para login com Google
       final user = await _authStore.signInWithGoogle();
       print(
           'LoginController: Login com Google bem-sucedido. User: ${user.name}');
@@ -60,31 +58,19 @@ class LoginController {
     }
   }
 
-  // MÉTODO ADICIONADO para Apple Sign-In
   Future<void> signInWithApple(BuildContext context) async {
-    // A verificação de plataforma (iOS/macOS) deve ser feita na UI
-    // antes de chamar este método (ou seja, o botão Apple só deve
-    // ser visível/clicável nessas plataformas).
-    // O AuthRepository/AuthStore já lida com o erro se for chamado
-    // em uma plataforma não suportada.
-
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
-      // Chama a action do AuthStore para login com Apple
       final user = await _authStore.signInWithApple();
       print(
           'LoginController: Login com Apple bem-sucedido. User: ${user.name}');
-      // Verifica se o widget ainda está montado antes de navegar
       if (context.mounted) {
-        // Navega para a home e remove todas as rotas anteriores
         Navigator.pushNamedAndRemoveUntil(
             context, AppRoutes.home, (route) => false);
       }
     } catch (e) {
       print('LoginController: Erro no Apple Sign-In - $e');
-      // Verifica se o widget ainda está montado antes de mostrar SnackBar
       if (context.mounted) {
-        // Mostra o erro para o usuário
         scaffoldMessenger.showSnackBar(
           SnackBar(
               content: Text(

@@ -17,7 +17,7 @@ abstract class _VideoPlayerStoreBase with Store {
   ObservableList<Subtitle> subtitles = ObservableList<Subtitle>();
 
   @observable
-  Subtitle? selectedSubtitle; // Legenda selecionada pelo usuário
+  Subtitle? selectedSubtitle;
 
   @observable
   bool isLoadingSubtitles = false;
@@ -42,11 +42,7 @@ abstract class _VideoPlayerStoreBase with Store {
       (subtitleList) {
         subtitles = ObservableList.of(subtitleList);
         print("[VideoPlayerStore] Legendas carregadas: ${subtitles.length}");
-        // Opcional: Selecionar a primeira legenda por padrão
-        if (subtitles.isNotEmpty) {
-          // TODO: Adicionar lógica para escolher um padrão (ex: 'pt-BR' ou 'en')
-          // selectSubtitle(subtitles.first);
-        }
+        if (subtitles.isNotEmpty) {}
       },
     );
     isLoadingSubtitles = false;
@@ -61,7 +57,6 @@ abstract class _VideoPlayerStoreBase with Store {
   }
 
   String _mapFailureToMessage(Failure failure) {
-    // Adapte sua função existente ou crie uma nova
     switch (failure.runtimeType) {
       case ServerFailure:
         return (failure as ServerFailure).message ?? 'Server Error';

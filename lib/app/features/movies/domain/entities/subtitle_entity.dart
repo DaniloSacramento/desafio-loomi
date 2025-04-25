@@ -1,9 +1,8 @@
-// lib/features/movies/domain/entities/subtitle_entity.dart
 class Subtitle {
   final int id;
-  final String language; // Ex: 'en', 'pt-BR'
-  final String format; // Ex: 'vtt', 'srt'
-  final String fileUrl; // URL para baixar/usar o arquivo .vtt/.srt
+  final String language;
+  final String format;
+  final String fileUrl;
 
   Subtitle({
     required this.id,

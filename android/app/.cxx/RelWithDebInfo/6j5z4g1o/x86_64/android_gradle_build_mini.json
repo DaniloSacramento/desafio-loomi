@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/mackbook-corptech-2/fvm/versions/stable/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/mackbook-corptech-2/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/mackbook-corptech-2/Documents/project/desafio-loomi/android/app/.cxx/RelWithDebInfo/6j5z4g1o/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/mackbook-corptech-2/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/mackbook-corptech-2/Documents/project/desafio-loomi/android/app/.cxx/RelWithDebInfo/6j5z4g1o/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}

@@ -51,7 +51,6 @@ abstract class _CommentsStoreBase with Store {
   @observable
   String? addCommentError;
 
-  // --- Estados para Deletar ---
   @observable
   bool isDeletingComment = false; // Flag geral
 
@@ -61,12 +60,11 @@ abstract class _CommentsStoreBase with Store {
   @observable
   String? deleteCommentError; // Erro específico da deleção
 
-  // --- Estados para Atualizar ---
   @observable
   bool isUpdatingComment = false; // Flag geral
 
   @observable
-  String? editingCommentId; // Qual ID está sendo editado
+  String? editingCommentId;
 
   @observable
   String? updateCommentError; // Erro específico da atualização
@@ -80,7 +78,6 @@ abstract class _CommentsStoreBase with Store {
   @action
   void listenToComments(String movieId) {
     print("[CommentsStore] Iniciando listener para movieId: $movieId");
-    // Reseta estados antes de ouvir novamente
     comments.clear();
     isLoadingComments = true;
     commentsError = null;
@@ -97,10 +94,8 @@ abstract class _CommentsStoreBase with Store {
 
     _commentsSubscription = _getCommentsStreamUseCase(movieId).listen(
       (eitherResult) {
-        // <<< NOVO LOG AQUI >>>
         print(
             "[CommentsStore] STREAM EVENT: Listener recebeu dados/erro. Hora: ${DateTime.now().toIso8601String()}. Instance: ${hashCode}");
-        // <<< FIM NOVO LOG >>>
 
         if (isLoadingComments) isLoadingComments = false;
 
@@ -109,13 +104,11 @@ abstract class _CommentsStoreBase with Store {
             print(
                 "[CommentsStore] STREAM EVENT: Falha recebida: ${failure.runtimeType}. Mensagem: ${_mapFailureToMessage(failure)}");
             commentsError = _mapFailureToMessage(failure);
-            // comments.clear(); // Decide se limpa em caso de erro
           },
           (commentsList) {
             print(
                 "[CommentsStore] STREAM EVENT: Sucesso recebido com ${commentsList.length} comentários.");
 
-            // <<< NOVO LOG AQUI >>>
             bool foundNewComment = false;
             for (var entity in commentsList) {
               if (entity.text == 'kk') {
@@ -130,17 +123,12 @@ abstract class _CommentsStoreBase with Store {
               print(
                   "[CommentsStore] STREAM EVENT: Comentário 'kk' NÃO encontrado na lista mapeada atual.");
             }
-            // <<< FIM NOVO LOG >>>
 
-            // Atualiza a lista observável
-            //  comments = ObservableList.of(commentsList);
             comments.clear();
             comments.addAll(commentsList);
             print(
                 "[CommentsStore] STREAM EVENT: Lista 'comments' ATUALIZADA via ObservableList.of. Novo tamanho: ${comments.length}.");
-            commentsError = null; // Limpa erro em caso de sucesso
-
-            // ----> PONTO CRÍTICO: A UI deveria reagir logo após esta linha <----
+            commentsError = null;
           },
         );
       },
@@ -152,7 +140,6 @@ abstract class _CommentsStoreBase with Store {
         commentsError = "Erro inesperado no stream: $error";
         // comments.clear();
       },
-      // onDone e cancelOnError continuam iguais
     );
   }
 
@@ -167,12 +154,11 @@ abstract class _CommentsStoreBase with Store {
         orElse: () => throw Exception("Comentário não encontrado para edição"));
     if (originalComment.text == newText.trim()) {
       updateCommentError = "Nenhuma alteração detectada.";
-      return false; // Ou true, dependendo se considera sucesso
+      return false;
     }
 
     isUpdatingComment = true;
-    editingCommentId =
-        commentId; // Marca qual está sendo editado *ANTES* do await
+    editingCommentId = commentId;
     updateCommentError = null;
     print("[CommentsStore] Tentando atualizar comentário: $commentId");
 
@@ -181,7 +167,6 @@ abstract class _CommentsStoreBase with Store {
       newText: newText.trim(),
     );
 
-    // Reseta os flags *DEPOIS* do await
     isUpdatingComment = false;
     editingCommentId = null;
 
@@ -199,7 +184,6 @@ abstract class _CommentsStoreBase with Store {
       (_) {
         print(
             "[CommentsStore] Comentário atualizado com sucesso! Aguardando stream...");
-        // O stream do Firestore cuidará de atualizar a lista na UI.
         return true;
       },
     );
@@ -213,14 +197,12 @@ abstract class _CommentsStoreBase with Store {
     }
 
     isDeletingComment = true;
-    deletingCommentId =
-        commentId; // Marca qual está sendo deletado *ANTES* do await
+    deletingCommentId = commentId;
     deleteCommentError = null;
     print("[CommentsStore] Tentando deletar comentário: $commentId");
 
     final result = await _deleteCommentUseCase(commentId);
 
-    // Reseta os flags *DEPOIS* do await
     isDeletingComment = false;
     deletingCommentId = null; // Limpa o ID aqui
 
@@ -234,7 +216,6 @@ abstract class _CommentsStoreBase with Store {
       (_) {
         print(
             "[CommentsStore] Comentário deletado com sucesso! Aguardando stream...");
-        // O stream do Firestore cuidará de remover o item da lista na UI.
         return true;
       },
     );
@@ -276,9 +257,6 @@ abstract class _CommentsStoreBase with Store {
         return false;
       },
       (_) {
-        print(
-            "[CommentsStore] Comentário adicionado com sucesso! Aguardando stream...");
-        // O stream do Firestore cuidará de adicionar o item na lista na UI.
         return true;
       },
     );
@@ -287,7 +265,6 @@ abstract class _CommentsStoreBase with Store {
   void dispose() {
     print("[CommentsStore] dispose: Cancelando listener de comentários.");
     _commentsSubscription?.cancel();
-    // Não precisa limpar os observables aqui, pois a instância do store será descartada (se for factory no GetIt)
   }
 
   String _mapFailureToMessage(Failure failure) {

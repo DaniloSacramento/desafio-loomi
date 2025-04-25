@@ -7,7 +7,7 @@ class LikeRequestModel {
   Map<String, dynamic> toJson() {
     return {
       'data': {
-        'movie_id': movieId, // Atenção aos nomes exatos dos campos da API!
+        'movie_id': movieId,
         'user_id': userId,
       }
     };

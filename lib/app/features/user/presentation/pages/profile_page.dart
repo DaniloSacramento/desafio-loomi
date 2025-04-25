@@ -137,13 +137,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             obscurePassword = !obscurePassword;
                           });
                         },
-                        // Estilo opcional para o campo no dialog
-                        // decoration: InputDecoration(...)
                       ),
                     ),
-                    // --- Fim do Formulário de Senha ---
 
-                    // Espaço para exibir erro, se houver
                     if (dialogErrorMessage != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 15.0),
@@ -158,19 +154,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Botões de Ação iguais aos da imagem
               actions: <Widget>[
-                TextButton(
-                  // Botão Cancelar (Texto Roxo)
-                  style: TextButton.styleFrom(
-                    foregroundColor:
-                        AppColors.buttonPrimary, // Cor roxa do texto
-                    textStyle: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold), // Estilo
-                  ),
-                  child: const Text('Cancel'),
-                  onPressed: isDialogLoading
-                      ? null
-                      : () => Navigator.of(dialogContext).pop(),
-                ),
                 const SizedBox(width: 10), // Espaço entre botões
                 ElevatedButton(
                   // Botão Deletar (Fundo Roxo)
@@ -531,16 +514,32 @@ class _ProfilePageState extends State<ProfilePage> {
                         Navigator.pushNamed(context, AppRoutes.home);
                       },
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.editProfile);
-                      },
-                      child: const Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                          fontSize: 14, // Ajuste o tamanho se necessário
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.buttonText,
+                    Flexible(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor:
+                              AppColors.buttonPrimary, // Cor do texto e ícones
+                          elevation: 0,
+                          shape:
+                              const StadiumBorder(), // Bordas arredondadas (formato de pílula)
+                          side: const BorderSide(
+                            color: AppColors
+                                .buttonPrimary, // Cor da borda (mesma do texto)
+                            width: 1.0, // Espessura da borda
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.editProfile);
+                        },
+                        child: const Text(
+                          'Edit Profile',
+                          style: TextStyle(
+                            fontSize: 14, // Tamanho da fonte
+                            fontWeight: FontWeight.bold,
+                            color: AppColors
+                                .buttonPrimary, // Garante que a cor do texto seja a primária
+                          ),
                         ),
                       ),
                     ),
@@ -662,47 +661,48 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                 ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
                 Row(
-                  // Centraliza o botão horizontalmente na linha
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        shape: const StadiumBorder(),
-                        side: BorderSide(
-                          color: Colors.grey.shade400,
-                          width: 1.5,
+                    Flexible(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          shape: const StadiumBorder(),
+                          side: BorderSide(
+                            color: Colors.grey.shade400,
+                            width: 1.5,
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 35, vertical: 14),
-                      ),
-                      onPressed: () async {
-                        try {
-                          await _authStore.signOut();
+                        onPressed: () async {
+                          try {
+                            await _authStore.signOut();
 
-                          if (mounted) {
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              AppRoutes.login,
-                              (route) => false,
-                            );
+                            if (mounted) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                AppRoutes.login,
+                                (route) => false,
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Error ${e.toString()}')),
+                              );
+                            }
                           }
-                        } catch (e) {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error ${e.toString()}')),
-                            );
-                          }
-                        }
-                      },
-                      child: const Text(
-                        'Log Out',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
+                        },
+                        child: const Text(
+                          'Log Out',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.white,
+                          ),
                         ),
                       ),
                     ),

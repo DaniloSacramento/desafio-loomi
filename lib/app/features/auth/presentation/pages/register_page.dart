@@ -110,38 +110,42 @@ class _RegisterPageState extends State<RegisterPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _authController.signInWithGoogle(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.buttonBackground,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(16),
-                          elevation: 2,
-                        ),
-                        child: Image.asset(
-                          'assets/logogoogle.png',
-                          height: 50,
-                          width: 50,
+                      Flexible(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _authController.signInWithGoogle(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonBackground,
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(16),
+                            elevation: 2,
+                          ),
+                          child: Image.asset(
+                            'assets/logogoogle.png',
+                            height: 50,
+                            width: 50,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _authController.signInWithApple(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.appleButton,
-                          foregroundColor: Colors.white,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(16),
-                          elevation: 2,
-                        ),
-                        child: Image.asset(
-                          'assets/logoapple.png',
-                          height: 50,
-                          width: 50,
+                      Flexible(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _authController.signInWithApple(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.appleButton,
+                            foregroundColor: Colors.white,
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(16),
+                            elevation: 2,
+                          ),
+                          child: Image.asset(
+                            'assets/logoapple.png',
+                            height: 50,
+                            width: 50,
+                          ),
                         ),
                       ),
                     ],
@@ -241,7 +245,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  // color: AppColors.buttonText, // Já definido no foregroundColor do styleFrom
+                                  color: AppColors.white,
                                 ),
                               ),
                       );

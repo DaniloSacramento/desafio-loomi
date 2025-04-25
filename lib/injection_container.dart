@@ -8,7 +8,6 @@ import 'package:desafio_loomi/app/features/auth/domain/repositories/onboard_repo
 import 'package:desafio_loomi/app/features/auth/presentation/store/auth_store.dart';
 import 'package:desafio_loomi/app/features/auth/presentation/store/onboard_store.dart';
 import 'package:desafio_loomi/app/features/movies/data/datasources/comments_firestore_data_source.dart';
-
 import 'package:desafio_loomi/app/features/movies/data/datasources/movie_remote_data_source.dart';
 import 'package:desafio_loomi/app/features/movies/data/datasources/movie_remote_data_source_impl.dart';
 import 'package:desafio_loomi/app/features/movies/data/datasources/video_player_remote_data_source.dart'; // <-- Import VideoPlayer DataSource
@@ -42,7 +41,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Use um nome consistente para a instância do GetIt
 final getIt = GetIt.instance;
 
 Future<void> configureDependencies() async {
@@ -54,7 +52,6 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
   getIt.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.standard());
 
-  // ApiClient (depende de Dio e FirebaseAuth)
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(
         dio: getIt<Dio>(),
         firebaseAuth: getIt<FirebaseAuth>(),
@@ -63,7 +60,6 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<CommentsFirestoreDataSource>(
     () => CommentsFirestoreDataSourceImpl(),
   );
-  // --- Data Sources ---
   getIt.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSource(
         getIt<SharedPreferences>()), // Depende de SharedPreferences
@@ -72,19 +68,16 @@ Future<void> configureDependencies() async {
     () => MovieRemoteDataSourceImpl(
         apiClient: getIt<ApiClient>()), // Depende de ApiClient
   );
-  // NOVO: Video Player DataSource
   getIt.registerLazySingleton<VideoPlayerRemoteDataSource>(
     () => VideoPlayerRemoteDataSourceImpl(
         apiClient: getIt<ApiClient>()), // Depende de ApiClient
   );
 
-  // --- Repositories ---
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       apiClient: getIt<ApiClient>(),
       firebaseAuth: getIt<FirebaseAuth>(),
       googleSignIn: getIt<GoogleSignIn>(),
-      // localDataSource: getIt<AuthLocalDataSource>(), // Adicione se AuthRepositoryImpl precisar
     ),
   );
   getIt.registerLazySingleton<OnboardRepository>(
@@ -95,10 +88,8 @@ Future<void> configureDependencies() async {
     () => MovieRepositoryImpl(
       remoteDataSource:
           getIt<MovieRemoteDataSource>(), // Depende de MovieRemoteDataSource
-      // networkInfo: getIt<NetworkInfo>(), // Opcional
     ),
   );
-  // NOVO: Video Player Repository
   getIt.registerLazySingleton<VideoPlayerRepository>(
     () => VideoPlayerRepositoryImpl(
       remoteDataSource: getIt<
@@ -126,11 +117,6 @@ Future<void> configureDependencies() async {
         getIt<UpdateCommentUseCase>(),
       ));
 
-  // --- Use Cases ---
-  // Auth UseCases (se você os tiver, registre aqui)
-
-  // Movie UseCases
-  // Added Delete UseCase
   getIt.registerLazySingleton(
       () => ChangePasswordUseCase(getIt<AuthRepository>()));
   getIt.registerLazySingleton(() => GetMoviesUseCase(getIt<MovieRepository>()));
@@ -147,8 +133,6 @@ Future<void> configureDependencies() async {
         getIt<UpdateUserProfileUseCase>(),
         getIt<AuthStore>(), // Passa o AuthStore singleton
       ));
-  // --- Stores (State Management) ---
-  // Registre AuthStore ANTES dos stores que dependem dele
   getIt.registerLazySingleton<AuthStore>(
     () => AuthStore(
       authRepository: getIt<AuthRepository>(),
@@ -168,9 +152,7 @@ Future<void> configureDependencies() async {
         unlikeMovieUseCase: getIt<UnlikeMovieUseCase>(),
         authStore: getIt<AuthStore>(), // Depende de AuthStore
       ));
-  // NOVO: Video Player Store (Use registerFactory se precisar de novas instâncias por página)
   getIt.registerFactory(() => VideoPlayerStore(
-        // Depende de GetSubtitlesUseCase
         getSubtitlesUseCase: getIt<GetSubtitlesUseCase>(),
       ));
 }

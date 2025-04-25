@@ -74,9 +74,6 @@ class _OnboardPageState extends State<OnboardPage> {
   Widget build(BuildContext context) {
     final onboardStore = GetIt.I.get<OnboardStore>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(''),
-      ),
       body: Stack(
         children: [
           Padding(
@@ -84,159 +81,122 @@ class _OnboardPageState extends State<OnboardPage> {
             child: Center(
               child: Form(
                 key: _formKey,
-                child: Column(
-                  children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                    const HalfCircleWithLine(
-                      size: 50,
-                      lineThicknessRatio: 0.1,
-                      innerCircleRatio: 0.4,
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                    const Text(
-                      'Tell us more!',
-                      style: TextStyle(
-                        color: AppColors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const HalfCircleWithLine(
+                        size: 50,
+                        lineThicknessRatio: 0.1,
+                        innerCircleRatio: 0.4,
                       ),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                    const Text(
-                      'Complete your profile',
-                      style: TextStyle(
-                        color: AppColors.grey,
-                        fontSize: 15,
-                      ),
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                            onPressed: () => _showImageSourceDialog(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.buttonBackground,
-                              shape: const CircleBorder(),
-                              padding: const EdgeInsets.all(54),
-                            ),
-                            child: Icon(Icons.camera_alt, size: 30)
-                            // child: Observer(
-                            //   builder: (_) {
-                            //     final onboardStore = GetIt.I.get<OnboardStore>();
-                            //     return onboardStore.profileImage != null
-                            //         ? CircleAvatar(
-                            //             radius: 30,
-                            //             backgroundImage:
-                            //                 FileImage(onboardStore.profileImage!),
-                            //           )
-                            //         : Icon(Icons.camera_alt, size: 30);
-                            //   },
-                            // ),
-                            ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        RichText(
-                          textAlign: TextAlign.start,
-                          text: const TextSpan(
-                            style: TextStyle(
-                              color: AppColors.grey,
-                              fontSize: 15,
-                            ),
-                            children: [
-                              TextSpan(text: 'Choose Image\n'),
-                              TextSpan(
-                                  text:
-                                      'A square .jpg, .gif,\n or .png image\n 200x200 or larger'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                    CustomTextFormField(
-                      controller: _controller.nameController,
-                      labelText: 'Your Name',
-                      keyboardType: TextInputType.emailAddress,
-                      // validator: AuthValidators.emailValidator,
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                    Observer(
-                      builder: (_) {
-                        if (onboardStore.errorMessage != null) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(onboardStore.errorMessage!)),
-                            );
-                            onboardStore.errorMessage =
-                                null; // Limpa a mensagem após exibir
-                          });
-                        }
-                        return const SizedBox.shrink(); // Widget vazio
-                      },
-                    ),
-                    Observer(
-                      builder: (_) {
-                        final onboardStore = GetIt.I.get<OnboardStore>();
-                        return ElevatedButton(
-                          onPressed: onboardStore.isLoading
-                              ? null
-                              : () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    // ADICIONE ESTE LOG:
-                                    debugPrint(
-                                        'OnboardPage: Checking user before calling completeOnboarding: ${FirebaseAuth.instance.currentUser?.uid}');
-                                    if (FirebaseAuth.instance.currentUser ==
-                                        null) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'Erro: Usuário não autenticado! Saindo...')),
-                                      );
-                                      // Considerar navegar de volta para o login aqui
-                                      return;
-                                    }
-                                    // FIM DO LOG
-
-                                    await _controller.completeOnboarding();
-                                    Navigator.pushNamed(
-                                        context, AppRoutes.home);
-                                  }
-                                },
-                          child: onboardStore.isLoading
-                              ? CircularProgressIndicator()
-                              : Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: AppColors.buttonText,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.register);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.transparent,
-                      ),
-                      child: Text(
-                        'Back',
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.04),
+                      const Text(
+                        'Tell us more!',
                         style: TextStyle(
-                          fontSize: 15,
-                          color: AppColors.buttonText,
+                          color: AppColors.white,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.01),
+                      const Text(
+                        'Complete your profile',
+                        style: TextStyle(
+                          color: AppColors.grey,
+                          fontSize: 15,
+                        ),
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.03),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.03),
+                      CustomTextFormField(
+                        controller: _controller.nameController,
+                        labelText: 'Your Name',
+                        keyboardType: TextInputType.emailAddress,
+                        // validator: AuthValidators.emailValidator,
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.03),
+                      Observer(
+                        builder: (_) {
+                          if (onboardStore.errorMessage != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(onboardStore.errorMessage!)),
+                              );
+                              onboardStore.errorMessage =
+                                  null; // Limpa a mensagem após exibir
+                            });
+                          }
+                          return const SizedBox.shrink(); // Widget vazio
+                        },
+                      ),
+                      Observer(
+                        builder: (_) {
+                          final onboardStore = GetIt.I.get<OnboardStore>();
+                          return ElevatedButton(
+                            onPressed: onboardStore.isLoading
+                                ? null
+                                : () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      // ADICIONE ESTE LOG:
+                                      debugPrint(
+                                          'OnboardPage: Checking user before calling completeOnboarding: ${FirebaseAuth.instance.currentUser?.uid}');
+                                      if (FirebaseAuth.instance.currentUser ==
+                                          null) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  'Erro: Usuário não autenticado! Saindo...')),
+                                        );
+
+                                        return;
+                                      }
+                                      // FIM DO LOG
+
+                                      await _controller.completeOnboarding();
+                                      Navigator.pushNamed(
+                                          context, AppRoutes.home);
+                                    }
+                                  },
+                            child: onboardStore.isLoading
+                                ? CircularProgressIndicator()
+                                : Text(
+                                    'Continue',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: AppColors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.01),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.register);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.transparent,
+                        ),
+                        child: Text(
+                          'Back',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: AppColors.buttonText,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -13,12 +13,9 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
 
-// A função fetchSubtitleContent continua a mesma...
 Future<String?> fetchSubtitleContent(String url) async {
-  // ... (código da função helper)
   if (url.isEmpty) return null;
   try {
-    // Use uma instância única de Dio se possível (via GetIt talvez?)
     final dio = Dio();
     print("[Util] Baixando legenda da URL: $url");
     final response = await dio.get<String>(url); // Pede String direto
@@ -50,10 +47,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   bool _isPlayerInitialized = false;
   ReactionDisposer? _subtitleReactionDisposer;
 
-  // **** NOVO: Estado para controlar o painel de comentários ****
   bool _isCommentsPanelVisible = false;
   final double _commentsPanelWidth = 360.0; // Largura do painel (ajuste)
-  // **** FIM NOVO ****
 
   @override
   void initState() {
@@ -78,21 +73,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     );
   }
 
-  // Seus métodos initializePlayer, _updatePlayerSubtitle, _createChewieController
-  // continuam como definidos anteriormente...
   Future<void> initializePlayer() async {
-    // Evita re-inicialização desnecessária
     if (_isPlayerInitialized || _videoPlayerController != null) return;
     print(
         "[VideoPlayerPage] initializePlayer: Iniciando para ${widget.movie.streamLink}");
 
-    // Limpa controllers antigos
     await _videoPlayerController?.dispose();
     _chewieController?.dispose();
     _videoPlayerController = null;
     _chewieController = null;
     _isPlayerInitialized = false;
-    if (mounted) setState(() {}); // Mostra loading
+    if (mounted) setState(() {});
 
     try {
       _videoPlayerController = VideoPlayerController.networkUrl(
@@ -102,18 +93,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       print(
           "[VideoPlayerPage] initializePlayer: VideoPlayerController inicializado.");
 
-      // Cria o ChewieController APÓS o player base estar pronto
       _createChewieController();
 
-      _isPlayerInitialized = true; // Atualiza flag
-      if (mounted) setState(() {}); // Atualiza UI para mostrar o player
+      _isPlayerInitialized = true;
+      if (mounted) setState(() {});
       print("[VideoPlayerPage] initializePlayer: Player pronto.");
 
-      // IMPORTANTE: Agora que o player está pronto, se já houver uma legenda
-      // selecionada no Store (ex: um padrão definido no fetchSubtitles),
-      // a reaction JÁ PODE ter sido disparada. Se não foi, podemos forçar
-      // a primeira atualização aqui ou confiar que a reaction pegará.
-      // Para garantir, podemos chamar _updatePlayerSubtitle uma vez:
       if (videoStore.selectedSubtitle != null) {
         print(
             "[VideoPlayerPage] initializePlayer: Chamando _updatePlayerSubtitle para legenda inicial selecionada.");
@@ -144,14 +129,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     ClosedCaptionFile? captionFile; // Tipo esperado pelo video_player
 
     if (subtitle != null && subtitle.fileUrl.isNotEmpty) {
-      // 1. Baixar o conteúdo da legenda usando a função helper
       final String? subtitleContent =
           await fetchSubtitleContent(subtitle.fileUrl);
 
       if (subtitleContent != null) {
-        // 2. Criar o objeto ClosedCaptionFile correto
         try {
-          // Verifica o formato (ajuste conforme os valores reais no seu SubtitleModel)
           if (subtitle.format.toLowerCase().contains('vtt')) {
             captionFile = WebVTTCaptionFile(subtitleContent);
             print(
@@ -168,7 +150,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         } catch (e) {
           print(
               "[VideoPlayerPage] _updatePlayerSubtitle: Erro ao processar legenda ${subtitle.language}: $e");
-          captionFile = null; // Garante que é nulo se falhar
+          captionFile = null;
           if (mounted)
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content:
@@ -186,16 +168,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           "[VideoPlayerPage] _updatePlayerSubtitle: Nenhuma legenda para definir (selecionado 'Nenhuma' ou URL vazia).");
     }
 
-    // 3. Definir a legenda (ou null) no controller base
     try {
-      // Passa um Future para o método. Future.value(null) limpa a legenda.
       await _videoPlayerController!
           .setClosedCaptionFile(Future.value(captionFile));
       print(
           "[VideoPlayerPage] _updatePlayerSubtitle: setClosedCaptionFile chamado com ${captionFile == null ? 'null' : 'arquivo'}.");
-
-      // O Chewie deve automaticamente habilitar/desabilitar o botão de legenda
-      // e usar a legenda definida aqui. Não precisamos forçar a exibição geralmente.
     } catch (e) {
       print(
           "[VideoPlayerPage] _updatePlayerSubtitle: ERRO ao definir legenda no player: $e");
@@ -237,19 +214,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           ),
         );
       },
-      // Adicionar controles customizados (opcional avançado)
-      // customControls: ...,
     );
     print("[VideoPlayerPage] _createChewieController: Criado.");
   }
 
-  // **** NOVO: Função para alternar a visibilidade do painel ****
   void _toggleCommentsPanel() {
     setState(() {
       _isCommentsPanelVisible = !_isCommentsPanelVisible;
     });
   }
-  // **** FIM NOVO ****
 
   @override
   void dispose() {
@@ -282,7 +255,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      // AppBar modificado para incluir botão de comentários
       appBar: AppBar(
         backgroundColor: Colors.black.withOpacity(0.5),
         elevation: 0,
@@ -337,29 +309,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             );
           }),
 
-          // **** NOVO: Botão Comentários ****
           IconButton(
             icon: const Icon(Icons.comment_outlined, color: Colors.white),
             tooltip: "Comentários",
             onPressed:
                 _toggleCommentsPanel, // Chama a função para mostrar/esconder
           ),
-          // **** FIM NOVO ****
         ],
       ),
-      // Corpo agora é um Stack
       body: Stack(
         children: [
-          // --- Player de Vídeo (ocupando tudo por padrão) ---
           Center(
             child: _isPlayerInitialized && _chewieController != null
                 ? chewie.Chewie(controller: _chewieController!)
                 : const CircularProgressIndicator(
                     color: Colors.white), // Loading
           ),
-
-          // --- Painel de Comentários (Animado) ---
-          // Usando AnimatedPositioned para deslizar da direita
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300), // Duração da animação
             curve: Curves.easeInOut, // Curva da animação

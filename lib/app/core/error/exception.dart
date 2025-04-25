@@ -2,7 +2,7 @@
 
 class ServerException implements Exception {
   final String? message;
-  final int? statusCode; // Opcional: guardar o status code HTTP
+  final int? statusCode;
 
   ServerException({this.message, this.statusCode});
 }

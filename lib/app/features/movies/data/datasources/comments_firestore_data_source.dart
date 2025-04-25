@@ -23,11 +23,6 @@ class CommentsFirestoreDataSourceImpl implements CommentsFirestoreDataSource {
         .orderBy('timestamp', descending: true) // Ordena pelos mais recentes
         .snapshots() // Retorna um Stream de QuerySnapshot
         .map((snapshot) {
-      // <<< NOVO LOG AQUI >>>
-      print(
-          "[DataSource-Firestore] STREAM EMIT: Snapshot recebido para movieId: $movieId. Documentos: ${snapshot.docs.length}. Hora: ${DateTime.now().toIso8601String()}");
-
-      // Verifica se o comentário recém-adicionado está no snapshot
       bool foundNewComment = false;
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>?;
@@ -43,31 +38,24 @@ class CommentsFirestoreDataSourceImpl implements CommentsFirestoreDataSource {
         print(
             "[DataSource-Firestore] STREAM EMIT: Comentário 'kk' NÃO encontrado no snapshot atual.");
       }
-      // <<< FIM NOVO LOG >>>
 
-      // Mapeia cada DocumentSnapshot para um CommentEntity
       try {
         final comments = snapshot.docs
             .map((doc) => CommentEntity.fromSnapshot(doc))
             .toList();
-        // Log após mapeamento bem-sucedido
         print(
             "[DataSource-Firestore] STREAM EMIT: Mapeamento concluído com ${comments.length} entidades.");
         return comments;
       } catch (e, s) {
-        // Log de erro no mapeamento
         print(
             "[DataSource-Firestore] STREAM EMIT: ERRO ao mapear snapshot: $e");
         print(s); // Imprime o stack trace do erro
         return <CommentEntity>[]; // Retorna lista vazia para não quebrar o stream
       }
     }).handleError((error, stackTrace) {
-      // <-- Adicione/verifique este handleError
       print(
           "[DataSource-Firestore] STREAM EMIT: ERRO DIRETO NO STREAM: $error");
       print(stackTrace);
-      // É importante que o erro seja relançado ou tratado para que o Repository/Store saibam
-      // throw error; // Ou retorne um estado de erro específico se preferir não quebrar
     });
   }
 
@@ -81,11 +69,8 @@ class CommentsFirestoreDataSourceImpl implements CommentsFirestoreDataSource {
   @override
   Future<void> updateComment(String commentId, String newText) async {
     print("[DataSource-Firestore] Atualizando comentário: $commentId");
-    // Atualiza apenas o campo 'text' do documento
     await _firestore.collection('movie_comments').doc(commentId).update({
       'text': newText,
-      // Opcional: Adicionar um timestamp de edição, se desejar
-      // 'lastEditedTimestamp': FieldValue.serverTimestamp(),
     });
     print("[DataSource-Firestore] Comentário atualizado.");
   }
@@ -99,7 +84,6 @@ class CommentsFirestoreDataSourceImpl implements CommentsFirestoreDataSource {
     };
     try {
       print("[DataSource-Firestore] Iniciando .add() com timeout...");
-      // Adiciona um timeout de 15 segundos
       await _firestore
           .collection('movie_comments')
           .add(dataWithTimestamp)

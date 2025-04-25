@@ -20,7 +20,6 @@ class CommentEntity {
     required this.timestamp,
   });
 
-  // Método para facilitar a criação a partir de um Firestore snapshot
   factory CommentEntity.fromSnapshot(DocumentSnapshot snap) {
     final data = snap.data() as Map<String, dynamic>;
     return CommentEntity(

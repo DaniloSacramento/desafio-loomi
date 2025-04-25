@@ -1,0 +1,2 @@
+/Users/mackbook-corptech-2/Documents/project/desafio-loomi/android/app/.cxx/RelWithDebInfo/6j5z4g1o/x86_64/CMakeFiles/edit_cache.dir
+/Users/mackbook-corptech-2/Documents/project/desafio-loomi/android/app/.cxx/RelWithDebInfo/6j5z4g1o/x86_64/CMakeFiles/rebuild_cache.dir

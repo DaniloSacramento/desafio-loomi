@@ -179,7 +179,6 @@ abstract class _MovieStoreBase with Store {
     print(
         "[STORE] Iniciando rateMovie - Movie ID: $movieId, Ação: $action, User ID: $userId");
 
-    // Verifica o estado ATUAL do like para este filme
     final existingLike = userLikes.firstWhereOrNull(
       (like) => like.movieId == movieId && like.userId == userId,
     );
@@ -207,8 +206,6 @@ abstract class _MovieStoreBase with Store {
                 print(
                     "[STORE] SUCESSO LIKE API - Resposta Like ID: ${newLikeResponse.id}");
 
-                // *** CORREÇÃO APLICADA ***
-                // Cria o LikeModel localmente com os IDs corretos
                 final likeToAdd = LikeModel(
                   id: newLikeResponse.id, // ID retornado pela API
                   movieId: movieId, // ID do filme da ação
@@ -219,13 +216,10 @@ abstract class _MovieStoreBase with Store {
                 print(
                     "[STORE] LikeModel CORRIGIDO adicionado localmente: (ID: ${likeToAdd.id}, MovieID: ${likeToAdd.movieId}, UserID: ${likeToAdd.userId})");
                 // --------------------------
-
-                // TODO: Lógica adicional para 'Love It' se necessário (ex: guardar em outro mapa local)
               },
             );
           } else {
             print("[STORE] Filme já curtido. Nenhuma API 'Like' chamada.");
-            // TODO: Lógica para 'Love It' em filme já curtido (ex: atualizar estado local)
           }
           break;
 

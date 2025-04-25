@@ -50,12 +50,12 @@ class _LoginPageState extends State<LoginPage> {
       // appBar: AppBar(
       //   title: const Text(''),
       // ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Form(
+              key: _formKey,
               child: Column(
                 children: [
                   SizedBox(height: MediaQuery.of(context).size.height * 0.01),
@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.buttonText,
+                              color: AppColors.white,
                             ),
                           ),
                         ),
@@ -140,38 +140,41 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _loginController.signInWithGoogle(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.buttonBackground,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(16),
-                          elevation: 2,
-                        ),
-                        child: Image.asset(
-                          'assets/logogoogle.png',
-                          height: 50,
-                          width: 50,
+                      Flexible(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _loginController.signInWithGoogle(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonBackground,
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(16),
+                            elevation: 2,
+                          ),
+                          child: Image.asset(
+                            'assets/logogoogle.png',
+                            height: 50,
+                            width: 50,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          _loginController.signInWithApple(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.appleButton,
-                          foregroundColor: Colors.white,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(16),
-                          elevation: 2,
-                        ),
-                        child: Image.asset(
-                          'assets/logoapple.png',
-                          height: 50,
-                          width: 50,
+                      Flexible(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _loginController.signInWithApple(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.appleButton,
+                            foregroundColor: Colors.white,
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(16),
+                            elevation: 2,
+                          ),
+                          child: Image.asset(
+                            'assets/logoapple.png',
+                            height: 50,
+                            width: 50,
+                          ),
                         ),
                       ),
                     ],

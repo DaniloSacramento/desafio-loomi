@@ -95,7 +95,6 @@ class AuthController {
     }
   }
 
-  // NOVO MÉTODO para Apple Sign-In (Registro/Login)
   Future<void> signInWithApple(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
@@ -103,15 +102,12 @@ class AuthController {
       print(
           'AuthController: Login/Registro com Apple bem-sucedido. User: ${user.name}');
       if (context.mounted) {
-        // Navega para Home após sucesso com Apple
         Navigator.pushNamedAndRemoveUntil(
             context, AppRoutes.home, (route) => false);
       }
     } catch (e) {
       print('AuthController: Erro no Apple Sign-In - $e');
       if (context.mounted) {
-        // Não mostrar erro de 'webAuthenticationOptions' para o usuário final
-        // A UI já deve prevenir a chamada no Android
         String errorMessage = e.toString().replaceFirst('Exception: ', '');
         if (errorMessage.contains('webAuthenticationOptions')) {
           errorMessage =

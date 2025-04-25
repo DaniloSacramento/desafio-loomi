@@ -1,8 +1,8 @@
 class Poster {
   final int id;
   final String name;
-  final String url; // URL principal da imagem
-  final String? thumbnailUrl; // URL da miniatura (opcional)
+  final String url;
+  final String? thumbnailUrl;
   final String? smallUrl;
   final String? mediumUrl;
   final String? largeUrl;

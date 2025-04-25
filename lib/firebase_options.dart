@@ -50,21 +50,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAHfsGU0-XC1rWd2PiBe245eOeethkP2tQ', // <-- NOVO VALOR
-    appId: '1:787952710825:android:d65eb905a7dcfac58b25b8', // <-- NOVO VALOR
-    messagingSenderId: '787952710825', // <-- NOVO VALOR (project_number)
-    projectId: 'untold-app-prod', // <-- NOVO VALOR
-    storageBucket: 'untold-app-prod.appspot.com', // <-- NOVO VALOR
+    apiKey: 'AIzaSyAHfsGU0-XC1rWd2PiBe245eOeethkP2tQ',
+    appId: '1:787952710825:android:d65eb905a7dcfac58b25b8',
+    messagingSenderId: '787952710825',
+    projectId: 'untold-app-prod',
+    storageBucket: 'untold-app-prod.appspot.com',
   );
 
-  // --- VALORES PARA IOS (vindos do GoogleService-Info.plist) ---
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDnRTXKUwPXCDSNbIEmu_9Uwkbb3SVuOcM', // <-- NOVO VALOR
-    appId:
-        '1:787952710825:ios:9b8e987e6e4cabeb8b25b8', // <-- NOVO VALOR (GOOGLE_APP_ID)
-    messagingSenderId: '787952710825', // <-- NOVO VALOR (GCM_SENDER_ID)
-    projectId: 'untold-app-prod', // <-- NOVO VALOR
-    storageBucket: 'untold-app-prod.appspot.com', // <-- NOVO VALOR
-    iosBundleId: 'com.app.untold', // <-- Mantém o mesmo (BUNDLE_ID)
+    apiKey: 'AIzaSyDnRTXKUwPXCDSNbIEmu_9Uwkbb3SVuOcM',
+    appId: '1:787952710825:ios:9b8e987e6e4cabeb8b25b8',
+    messagingSenderId: '787952710825',
+    projectId: 'untold-app-prod',
+    storageBucket: 'untold-app-prod.appspot.com',
+    iosBundleId: 'com.app.untold',
   );
 }
