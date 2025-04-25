@@ -12,7 +12,6 @@ class VideoPlayerRemoteDataSourceImpl implements VideoPlayerRemoteDataSource {
 
   @override
   Future<List<SubtitleModel>> getSubtitles(int movieId) async {
-    // Monta a URL com o filtro para o movieId específico
     final path =
         '/api/subtitles?populate=file&filters[movie_id][\$eq]=$movieId';
     print("[DATASOURCE] Buscando legendas: $path"); // Log

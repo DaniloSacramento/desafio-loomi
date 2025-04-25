@@ -23,7 +23,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Configura reações para feedback (erro/sucesso)
     _disposers = [
       reaction(
         (_) => _store.errorMessage,
@@ -32,7 +31,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(message), backgroundColor: Colors.red),
             );
-            // _store.errorMessage = null; // Opcional: limpar após mostrar
           }
         },
       ),
@@ -47,7 +45,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                 duration: Duration(seconds: 2),
               ),
             );
-            // Volta para a tela anterior (provavelmente ProfilePage)
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
                 Navigator.pushReplacementNamed(context, AppRoutes.profile);
@@ -191,7 +188,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.06),
 
-                  // --- Botão Atualizar Perfil ---
                   ElevatedButton(
                     // Observa isLoading e chama action do store
                     onPressed:

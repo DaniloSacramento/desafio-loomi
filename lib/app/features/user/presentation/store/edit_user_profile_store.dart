@@ -21,16 +21,14 @@ abstract class _EditUserProfileStoreBase with Store {
     _loadInitialData();
   }
 
-  // --- Controllers & Form Key ---
   final TextEditingController usernameController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  // --- Observables for State ---
   @observable
-  String? currentPhotoUrl; // URL da foto vinda do AuthStore
+  String? currentPhotoUrl;
 
   @observable
-  File? selectedImageFile; // Arquivo local selecionado
+  File? selectedImageFile;
 
   @observable
   bool isLoading = false;
@@ -91,8 +89,6 @@ abstract class _EditUserProfileStoreBase with Store {
         },
         (updatedUser) {
           print("EditUserProfileStore Success: Profile updated.");
-          // Atualiza o AuthStore principal com os novos dados
-          // Isso garante que toda a app reflita a mudança
           _authStore.user = updatedUser;
           updateSuccess = true; // Sinaliza sucesso para a UI
         },
@@ -115,18 +111,15 @@ abstract class _EditUserProfileStoreBase with Store {
     return 'An unexpected error occurred.';
   }
 
-  // --- Dispose ---
   void dispose() {
     print("Disposing EditUserProfileStore controllers...");
     usernameController.dispose();
   }
 
-  // --- Validators ---
   String? validateUsername(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your username';
     }
-    // Adicione outras validações se necessário (ex: tamanho mínimo/máximo)
     return null;
   }
 }

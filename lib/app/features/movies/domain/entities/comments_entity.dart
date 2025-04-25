@@ -2,11 +2,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // Para Timestamp
 
 class CommentEntity {
-  final String id; // ID do documento Firestore
+  final String id;
   final String movieId;
   final String userId;
   final String userName;
-  final String? userAvatarUrl; // Opcional
+  final String? userAvatarUrl;
   final String text;
   final Timestamp timestamp; // Para ordenação
 

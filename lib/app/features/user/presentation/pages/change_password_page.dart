@@ -1,5 +1,3 @@
-// File: lib/app/features/auth/presentation/pages/change_password_page.dart
-
 import 'package:desafio_loomi/app/core/routes/app_routes.dart'; // Keep for navigation
 import 'package:desafio_loomi/app/core/themes/app_colors.dart';
 import 'package:desafio_loomi/app/features/auth/domain/validators/auth_validators.dart'; // Keep for direct validator use
@@ -25,9 +23,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   void initState() {
     super.initState();
-    // Setup reactions to listen for changes in the store
     _disposers = [
-      // Reaction for error messages
       reaction(
         (_) => _store.errorMessage,
         (String? message) {
@@ -41,13 +37,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           }
         },
       ),
-      // Reaction for success
       reaction(
         (_) => _store.changePasswordSuccess, // Observa a flag de sucesso
         (bool success) {
           if (success && mounted) {
-            // Se sucesso for true e o widget ainda estiver montado
-            // 1. Mostra a SnackBar de sucesso
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Senha atualizada com sucesso!'),
@@ -56,17 +49,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ),
             );
 
-            // 2. Aguarda um pouco para o usuário ver a SnackBar e então navega
             Future.delayed(const Duration(milliseconds: 800), () {
               // Pequeno delay
               if (mounted) {
-                // Verifica novamente se está montado após o delay
-                // 3. Navega para a tela de Editar Perfil substituindo a atual
                 Navigator.pushReplacementNamed(context, AppRoutes.profile);
-                // Ou, se preferir empilhar a tela em vez de substituir:
-                // Navigator.pushNamed(context, AppRoutes.editProfile);
-                // Ou, se for para simplesmente voltar para a tela anterior (ex: ProfilePage):
-                // Navigator.pop(context);
               }
             });
           }

@@ -34,25 +34,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return showDialog<void>(
       context: context,
-      // Descomente se quiser permitir fechar clicando fora (quando não está carregando)
-      // barrierDismissible: !isDialogLoading,
       builder: (BuildContext dialogContext) {
-        // StatefulBuilder para atualizar o estado interno do diálogo (obscure, loading, error)
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              // Estilo do Dialog
               backgroundColor:
                   AppColors.profileOptionBackground, // Fundo escuro do dialog
               shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(20.0)), // Cantos arredondados
-              // Controlar paddings manualmente para mais precisão
               titlePadding: EdgeInsets.zero,
               contentPadding: const EdgeInsets.fromLTRB(24.0, 10.0, 24.0, 15.0),
               actionsPadding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
 
-              // Título customizado igual ao da imagem
               title: Padding(
                 padding: const EdgeInsets.only(
                     top: 12.0, left: 8.0, right: 8.0, bottom: 8.0),
@@ -86,7 +80,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
 
-              // Conteúdo: Textos + Campo de Senha
               content: SingleChildScrollView(
                 child: ListBody(
                   children: <Widget>[
@@ -152,7 +145,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
 
-              // Botões de Ação iguais aos da imagem
               actions: <Widget>[
                 const SizedBox(width: 10), // Espaço entre botões
                 ElevatedButton(
@@ -185,14 +177,12 @@ class _ProfilePageState extends State<ProfilePage> {
                               dialogErrorMessage = null;
                             });
                             try {
-                              // Chama o store com a senha digitada
                               await _authStore
                                   .deleteUserAccount(passwordController.text);
                               if (mounted)
                                 Navigator.of(dialogContext)
                                     .pop(); // Fecha o dialog em caso de sucesso
                             } catch (e) {
-                              // Exibe o erro no dialog
                               setDialogState(() {
                                 dialogErrorMessage = e
                                     .toString()
@@ -223,14 +213,12 @@ class _ProfilePageState extends State<ProfilePage> {
       // Adiciona um espaçamento vertical entre os botões
       padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Material(
-        // Use Material para InkWell funcionar corretamente com borderRadius
         color: backgroundColor,
         borderRadius:
             BorderRadius.circular(15.0), // Ajuste o raio conforme a imagem
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(
-              15.0), // Mantém o efeito de toque dentro das bordas
+          borderRadius: BorderRadius.circular(15.0),
           child: Padding(
             // Padding interno do botão
             padding:
@@ -340,18 +328,13 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildHistoryMovieCard(Movie movie) {
-    // Determina a URL a ser usada (fallback se necessário)
-    // Usar 'small' ou 'thumbnail' é geralmente bom para listas
     final imageUrl = movie.poster?.smallUrl ??
         movie.poster?.thumbnailUrl ??
         movie.poster?.url;
-    // O ano não está no modelo, vamos exibir apenas o nome por enquanto
-    // Se você adicionar 'year' ao MovieModel, pode usá-lo aqui.
     final String movieTitle = movie.name;
-    // final String movieInfo = '${movie.name} • ${movie.year ?? 'N/A'}'; // Se tivesse o ano
 
     return Container(
-      width: 110, // Largura do card (ajuste conforme necessário)
+      width: 110,
       margin: const EdgeInsets.only(right: 12.0), // Espaço entre os cards
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12.0),
@@ -361,8 +344,7 @@ class _ProfilePageState extends State<ProfilePage> {
             if (imageUrl != null && imageUrl.isNotEmpty)
               Image.network(
                 imageUrl,
-                fit: BoxFit.cover, // Cobre todo o espaço do card
-                // Placeholder enquanto carrega
+                fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
@@ -375,7 +357,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                 AlwaysStoppedAnimation<Color>(Colors.white54))),
                   );
                 },
-                // Tratamento de erro se a imagem falhar
                 errorBuilder: (context, error, stackTrace) {
                   print("Erro ao carregar imagem: $imageUrl - $error");
                   return Container(
@@ -388,7 +369,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 },
               )
             else
-              // Placeholder se não houver URL de imagem
               Container(
                 color: Colors.grey[800],
                 child: const Center(
@@ -396,7 +376,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         color: Colors.white54)),
               ),
 
-            // Gradiente escuro na parte inferior para legibilidade do texto
             Positioned(
               bottom: 0,
               left: 0,
@@ -416,7 +395,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
 
-            // Texto sobreposto (Nome do Filme)
             Positioned(
               bottom: 8, // Posição do texto a partir da base
               left: 8,
@@ -629,10 +607,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 SizedBox(
                   height: 160, // Altura dos cards do histórico (ajuste)
                   child: Builder(
-                    // Usa Builder para acesso ao estado mais recente
                     builder: (context) {
                       if (isLoadingMovies && movies.isEmpty) {
-                        // Mostra loading apenas se estiver carregando e não tiver filmes ainda
                         return const Center(child: CircularProgressIndicator());
                       } else if (movieError != null) {
                         // Mostra erro se houver
@@ -641,15 +617,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                 'Erro ao carregar histórico: $movieError',
                                 style: const TextStyle(color: Colors.red)));
                       } else if (movies.isEmpty && !isLoadingMovies) {
-                        // Mostra mensagem se não houver filmes e não estiver carregando
                         return const Center(
                             child: Text('Nenhum filme no histórico.',
                                 style: TextStyle(color: Colors.grey)));
                       } else {
-                        // Mostra a lista de filmes
                         return ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          // Adiciona padding à direita da lista para não cortar o último item abruptamente
                           padding: const EdgeInsets.only(right: 16.0),
                           itemCount: movies.length,
                           itemBuilder: (context, index) {

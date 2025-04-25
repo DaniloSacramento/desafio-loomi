@@ -58,10 +58,8 @@ class _LogoWithTextPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // 1. Desenha os semicírculos brancos
     final whitePaint = Paint()..color = AppColors.white;
 
-    // Semicírculo superior
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi,
@@ -70,7 +68,6 @@ class _LogoWithTextPainter extends CustomPainter {
       whitePaint,
     );
 
-    // Semicírculo inferior
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       0,
@@ -79,13 +76,11 @@ class _LogoWithTextPainter extends CustomPainter {
       whitePaint,
     );
 
-    // 2. Prepara o texto
     final textPainter = TextPainter(
       text: TextSpan(text: text, style: textStyle),
       textDirection: TextDirection.ltr,
     )..layout();
 
-    // 3. Desenha o texto na linha central
     final lineTextOffset =
         center - Offset(textPainter.width / 2, textPainter.height / 2);
     _drawTextInArea(
@@ -99,7 +94,6 @@ class _LogoWithTextPainter extends CustomPainter {
       ),
     );
 
-    // 4. Desenha o texto no círculo central
     final circleTextOffset =
         center - Offset(textPainter.width / 2, textPainter.height / 2);
     _drawTextInArea(
@@ -109,7 +103,6 @@ class _LogoWithTextPainter extends CustomPainter {
       Rect.fromCircle(center: center, radius: innerCircleSize / 2),
     );
 
-    // 5. Desenha as partes pretas por cima para "cortar" o texto
     final blackPaint = Paint()..color = AppColors.black;
 
     // Linha central
@@ -121,7 +114,6 @@ class _LogoWithTextPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round,
     );
 
-    // Círculo central
     canvas.drawCircle(center, innerCircleSize / 2, blackPaint);
   }
 

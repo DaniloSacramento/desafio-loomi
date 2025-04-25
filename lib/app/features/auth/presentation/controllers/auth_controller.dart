@@ -79,7 +79,6 @@ class AuthController {
       print(
           'AuthController: Login/Registro com Google bem-sucedido. User: ${user.name}');
       if (context.mounted) {
-        // Navega para Home após sucesso com Google
         Navigator.pushNamedAndRemoveUntil(
             context, AppRoutes.home, (route) => false);
       }

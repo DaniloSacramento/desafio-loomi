@@ -1,5 +1,3 @@
-// File: lib/app/features/auth/presentation/store/change_password_store.dart
-
 import 'package:desafio_loomi/app/core/error/failures.dart';
 import 'package:desafio_loomi/app/features/auth/domain/validators/auth_validators.dart';
 import 'package:desafio_loomi/app/features/user/domain/usecases/change_password_usecase.dart';
@@ -40,7 +38,6 @@ abstract class _ChangePasswordStoreBase with Store {
   @observable
   bool changePasswordSuccess = false; // Flag for success state
 
-  // --- Actions for UI Interaction ---
   @action
   void toggleCurrentPasswordVisibility() {
     obscureCurrentPassword = !obscureCurrentPassword;
@@ -56,14 +53,12 @@ abstract class _ChangePasswordStoreBase with Store {
     obscureConfirmPassword = !obscureConfirmPassword;
   }
 
-  // --- Action for Business Logic ---
   @action
   Future<void> submitChangePassword() async {
     // Reset states
     errorMessage = null;
     changePasswordSuccess = false;
 
-    // Validate form
     if (formKey.currentState?.validate() ?? false) {
       isLoading = true;
       final params = ChangePasswordParams(

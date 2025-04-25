@@ -1,5 +1,3 @@
-// File: lib/app/features/auth/domain/usecases/change_password_usecase.dart
-
 import 'package:dartz/dartz.dart';
 import 'package:desafio_loomi/app/core/error/exception.dart'; // Import ServerException if your repo throws it
 import 'package:desafio_loomi/app/core/error/failures.dart';
